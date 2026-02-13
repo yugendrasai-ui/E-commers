@@ -4,7 +4,10 @@ import mysql.connector
 import bcrypt
 import random
 import config
+import os
+from werkzeug.utils import secure_filename
 
+# db connection function
 def get_db_connection():
     """
     This function creates and returns 
@@ -32,6 +35,11 @@ app.config['MAIL_PASSWORD'] = config.MAIL_PASSWORD
 
 mail = Mail(app)
 
+# ------------------- IMAGE UPLOAD PATH -------------------
+UPLOAD_FOLDER = 'static/uploads/product_images'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+
 
 #---------------- HOME ROUTE ----------------
 @app.route('/')
@@ -48,7 +56,7 @@ def admin_signup():
 
     # Show form
     if request.method == "GET":
-        return render_template("admin/admin_signup.html")
+        return render_template("admin/signup.html")
 
     # POST → Process signup
     name = request.form['name']
@@ -134,6 +142,350 @@ def verify_otp_post():
 
     flash("Admin Registered Successfully!", "success")
     return redirect('/admin-signup')
+
+
+# =================================================================
+# ROUTE 4: ADMIN LOGIN PAGE (GET + POST)
+# =================================================================
+@app.route('/admin-login', methods=['GET', 'POST'])
+def admin_login():
+
+    # Show login page
+    if request.method == 'GET':
+        return render_template("admin/login.html")
+
+    # POST → Validate login
+    email = request.form['email']
+    password = request.form['password']
+
+    # Step 1: Check if admin email exists
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("SELECT * FROM admin WHERE email=%s", (email,))
+    admin = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if admin is None:
+        flash("Email not found! Please register first.", "danger")
+        return redirect('/admin-login')
+
+    # Step 2: Compare entered password with hashed password
+    stored_hashed_password = admin['password'].encode('utf-8')
+
+    if not bcrypt.checkpw(password.encode('utf-8'), stored_hashed_password):
+        flash("Incorrect password! Try again.", "danger")
+        return redirect('/admin-login')
+
+    # Step 5: If login success → Create admin session
+    session['admin_id'] = admin['admin_id']
+    session['admin_name'] = admin['name']
+    session['admin_email'] = admin['email']
+
+    flash("Login Successful!", "success")
+    return redirect('/admin-dashboard')
+
+# =================================================================
+# ROUTE 5: ADMIN DASHBOARD (PROTECTED ROUTE)
+# =================================================================
+@app.route('/admin-dashboard')
+def admin_dashboard():
+
+    # Protect dashboard → Only logged-in admin can access
+    if 'admin_id' not in session:
+        flash("Please login to access dashboard!", "danger")
+        return redirect('/admin-login')
+
+    # Send admin name to dashboard UI
+    return render_template("admin/dashboard.html", admin_name=session['admin_name'])
+
+
+# =================================================================
+# ROUTE 6: ADMIN LOGOUT
+# =================================================================
+@app.route('/admin-logout')
+def admin_logout():
+
+    # Clear admin session
+    session.pop('admin_id', None)
+    session.pop('admin_name', None)
+    session.pop('admin_email', None)
+
+    flash("Logged out successfully.", "success")
+    return redirect('/admin-login')
+
+
+
+# =================================================================
+# ROUTE 1: SHOW ADD PRODUCT PAGE (Protected Route)
+# =================================================================
+@app.route('/admin/add-item', methods=['GET'])
+def add_item_page():
+
+    # Only logged-in admin can access
+    if 'admin_id' not in session:
+        flash("Please login first!", "danger")
+        return redirect('/admin-login')
+
+    return render_template("admin/add_item.html")
+
+
+
+# =================================================================
+# ROUTE 2: ADD PRODUCT INTO DATABASE
+# =================================================================
+@app.route('/admin/add-item', methods=['POST'])
+def add_item():
+
+    # Check admin session
+    if 'admin_id' not in session:
+        flash("Please login first!", "danger")
+        return redirect('/admin-login')
+
+    # 1️⃣ Get form data
+    name = request.form['name']
+    description = request.form['description']
+    category = request.form['category']
+    price = request.form['price']
+    image_file = request.files['image']
+
+    # 2️⃣ Validate image upload
+    if image_file.filename == "":
+        flash("Please upload a product image!", "danger")
+        return redirect('/admin/add-item')
+
+    # 3️⃣ Secure the file name
+    filename = secure_filename(image_file.filename)
+
+    # 4️⃣ Create full path
+    image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+    # 5️⃣ Save image into folder
+    image_file.save(image_path)
+
+    # 6️⃣ Insert product into database
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "INSERT INTO products (name, description, category, price, image) VALUES (%s, %s, %s, %s, %s)",
+        (name, description, category, price, filename)
+    )
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash("Product added successfully!", "success")
+    return redirect('/admin/add-item')
+
+
+# =================================================================
+# ROUTE 9: DISPLAY ALL PRODUCTS (Admin)
+# =================================================================
+@app.route('/admin/item-list')
+def item_list():
+
+    if 'admin_id' not in session:
+        flash("Please login!", "danger")
+        return redirect('/admin-login')
+
+    search = request.args.get('search', '')
+    category_filter = request.args.get('category', '')
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # 1️⃣ Fetch category list for dropdown
+    cursor.execute("SELECT DISTINCT category FROM products")
+    categories = cursor.fetchall()
+
+    # 2️⃣ Build dynamic query based on filters
+    query = "SELECT * FROM products WHERE 1=1"
+    params = []
+
+    if search:
+        query += " AND name LIKE %s"
+        params.append("%" + search + "%")
+
+    if category_filter:
+        query += " AND category = %s"
+        params.append(category_filter)
+
+    cursor.execute(query, params)
+    products = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        "admin/item_list.html",
+        products=products,
+        categories=categories
+    )
+
+
+# =================================================================
+# DELETE PRODUCT (DELETE DB ROW + DELETE IMAGE FILE)
+# =================================================================
+@app.route('/admin/delete-item/<int:item_id>')
+def delete_item(item_id):
+
+    if 'admin_id' not in session:
+        flash("Please login first!", "danger")
+        return redirect('/admin-login')
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # 1️⃣ Fetch product to get image name
+    cursor.execute("SELECT image FROM products WHERE product_id=%s", (item_id,))
+    product = cursor.fetchone()
+
+    if not product:
+        flash("Product not found!", "danger")
+        return redirect('/admin/item-list')
+
+    image_name = product['image']
+
+    # Delete image from folder
+    image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_name)
+    if os.path.exists(image_path):
+        os.remove(image_path)
+
+    # 2️⃣ Delete product from DB
+    cursor.execute("DELETE FROM products WHERE product_id=%s", (item_id,))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    flash("Product deleted successfully!", "success")
+    return redirect('/admin/item-list')
+
+
+#=================================================================
+# ROUTE 10: VIEW SINGLE PRODUCT DETAILS
+# =================================================================
+@app.route('/admin/view-item/<int:item_id>')
+def view_item(item_id):
+
+    # Check admin session
+    if 'admin_id' not in session:
+        flash("Please login first!", "danger")
+        return redirect('/admin-login')
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("SELECT * FROM products WHERE product_id = %s", (item_id,))
+    product = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if not product:
+        flash("Product not found!", "danger")
+        return redirect('/admin/item-list')
+
+    return render_template("admin/view_item.html", product=product)
+
+# =================================================================
+# ROUTE 11: SHOW UPDATE FORM WITH EXISTING DATA
+# =================================================================
+@app.route('/admin/update-item/<int:item_id>', methods=['GET'])
+def update_item_page(item_id):
+
+    # Check login
+    if 'admin_id' not in session:
+        flash("Please login!", "danger")
+        return redirect('/admin-login')
+
+    # Fetch product data
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("SELECT * FROM products WHERE product_id = %s", (item_id,))
+    product = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if not product:
+        flash("Product not found!", "danger")
+        return redirect('/admin/item-list')
+
+    return render_template("admin/update_item.html", product=product)
+# =================================================================
+# ROUTE: UPDATE PRODUCT + OPTIONAL IMAGE REPLACE
+# =================================================================
+@app.route('/admin/update-item/<int:item_id>', methods=['POST'])
+def update_item(item_id):
+
+    if 'admin_id' not in session:
+        flash("Please login!", "danger")
+        return redirect('/admin-login')
+
+    # 1️⃣ Get updated form data
+    name = request.form['name']
+    description = request.form['description']
+    category = request.form['category']
+    price = request.form['price']
+
+    new_image = request.files['image']
+
+    # 2️⃣ Fetch old product data
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM products WHERE product_id = %s", (item_id,))
+    product = cursor.fetchone()
+
+    if not product:
+        flash("Product not found!", "danger")
+        return redirect('/admin/item-list')
+
+    old_image_name = product['image']
+
+    # 3️⃣ If admin uploaded a new image → replace it
+    if new_image and new_image.filename != "":
+        
+        # Secure filename
+        from werkzeug.utils import secure_filename
+        new_filename = secure_filename(new_image.filename)
+
+        # Save new image
+        new_image_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
+        new_image.save(new_image_path)
+
+        # Delete old image file
+        old_image_path = os.path.join(app.config['UPLOAD_FOLDER'], old_image_name)
+        if os.path.exists(old_image_path):
+            os.remove(old_image_path)
+
+        final_image_name = new_filename
+
+    else:
+        # No new image uploaded → keep old one
+        final_image_name = old_image_name
+
+    # 4️⃣ Update product in the database
+    cursor.execute("""
+        UPDATE products
+        SET name=%s, description=%s, category=%s, price=%s, image=%s
+        WHERE product_id=%s
+    """, (name, description, category, price, final_image_name, item_id))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash("Product updated successfully!", "success")
+    return redirect('/admin/item-list')
+
+
+
 
 
 if __name__ == '__main__':
