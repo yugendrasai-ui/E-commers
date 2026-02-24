@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Products - Seller Central{% endblock %}
+
+{% block content %}
+<div class="admin-products-header">
+    <div class="ah-left">
+        <h1>My Products ({{ products|length }})</h1>
+        <p>Manage your inventory and update product details.</p>
+    </div>
+    <div class="ah-right">
+        <a href="/merchant/add-item" class="btn-add-large">
+            <i class="bi bi-plus-lg"></i>
+            ADD NEW PRODUCT
+        </a>
+    </div>
+</div>
+
+<!-- Products Grid (Using existing UI components) -->
+<div class="product-container">
+
+    {% for product in products %}
+    <div class="product-card admin-card">
+
+        <!-- Image -->
+        <img src="/static/uploads/product_images/{{ product.image }}" alt="{{ product.name }}">
+
+        <!-- Details -->
+        <div class="product-info">
+            <p class="category">{{ product.category }}</p>
+            <h3>{{ product.name }}</h3>
+
+            <div class="price-box">
+                <span class="new-price">₹{{ product.price }}</span>
+                <span class="stock-status ps-green">In Stock</span>
+            </div>
+        </div>
+
+        <!-- Admin Actions -->
+        <div class="admin-actions">
+            <a href="/merchant/view-item/{{ product.product_id }}" class="act-btn view">
+                <i class="bi bi-eye"></i> View
+            </a>
+            <a href="/merchant/update-item/{{ product.product_id }}" class="act-btn edit">
+                <i class="bi bi-pencil-square"></i> Edit
+            </a>
+            <a href="/merchant/delete-item/{{ product.product_id }}" class="act-btn delete"
+                onclick="return confirm('Are you sure you want to delete this product?')">
+                <i class="bi bi-trash3"></i> Delete
+            </a>
+        </div>
+
+    </div>
+    {% endfor %}
+
+    {% if not products %}
+    <div class="empty-admin-state">
+        <img src="https://rukminim2.flixcart.com/www/800/800/promos/16/05/2019/d438a32e-765a-4d8b-b4a6-520b560971e8.png?q=90"
+            width="200">
+        <h3>No products found!</h3>
+        <p>Start selling by adding your first product.</p>
+        <a href="/merchant/add-item" class="btn-add-large" style="margin-top: 20px;">Add Product</a>
+    </div>
+    {% endif %}
+
+</div>
+
+<style>
+    .admin-products-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 30px 0;
+        border-bottom: 1px solid #e0e0e0;
+        margin-bottom: 30px;
+    }
+
+    body.dark .admin-products-header {
+        border-color: #333;
+    }
+
+    .ah-left h1 {
+        font-size: 22px;
+        margin: 0;
+    }
+
+    .ah-left p {
+        color: #878787;
+        margin: 5px 0 0 0;
+    }
+
+    .btn-add-large {
+        background: #fb641b;
+        color: #fff;
+        padding: 12px 25px;
+        border-radius: 2px;
+        font-weight: 600;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, .2);
+    }
+
+    .admin-card {
+        cursor: default !important;
+        transition: none !important;
+    }
+
+    .admin-actions {
+        display: flex;
+        border-top: 1px solid #f0f0f0;
+        margin-top: 15px;
+    }
+
+    body.dark .admin-actions {
+        border-color: #333;
+    }
+
+    .act-btn {
+        flex: 1;
+        text-align: center;
+        padding: 12px 0;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        color: #212121;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    body.dark .act-btn {
+        color: #ccc;
+    }
+
+    .act-btn:hover {
+        background: #f9f9f9;
+        color: #2874f0;
+    }
+
+    body.dark .act-btn:hover {
+        background: #111;
+    }
+
+    .act-btn.delete:hover {
+        color: #ff4d4d;
+    }
+
+    .act-btn:not(:last-child) {
+        border-right: 1px solid #f0f0f0;
+    }
+
+    body.dark .act-btn:not(:last-child) {
+        border-right-color: #333;
+    }
+
+    .empty-admin-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 100px 0;
+    }
+
+    .empty-admin-state h3 {
+        margin: 20px 0 10px;
+    }
+
+    .empty-admin-state p {
+        color: #878787;
+    }
+</style>
+{% endblock %}

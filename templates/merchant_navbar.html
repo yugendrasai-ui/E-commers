@@ -1,0 +1,101 @@
+<nav class="navbar admin-navbar">
+
+    <!-- Left: Logo + Admin Badge -->
+    <div class="nav-left">
+        <a href="/merchant/item-list" class="logo">EXPRESS-MERCHANTS</a>
+        <span class="admin-badge {% if session.get('admin_role') == 'super_admin' %}super-badge{% endif %}">
+            MERCHANT{% if session.get('admin_role') == 'super_admin' %} - SUPER{% endif %}
+        </span>
+    </div>
+
+    <!-- Center: Search -->
+    <form action="/merchant/item-list" method="GET" class="nav-search main-search">
+        <select name="category" class="search-category">
+            <option value="">All</option>
+            {% for cat in categories %}
+            <option value="{{ cat.category }}" {% if request.args.get('category')==cat.category %} selected {% endif %}>
+                {{ cat.category }}
+            </option>
+            {% endfor %}
+        </select>
+        <input type="text" name="search" placeholder="Search your products..."
+            value="{{ request.args.get('search','') }}">
+        <button type="submit">
+            <i class="bi bi-search"></i>
+        </button>
+    </form>
+
+    <!-- Right: Admin Menu -->
+    <div class="nav-right desktop-only">
+        {% if session.get('admin_id') is not none %}
+        <!-- Manage Products -->
+        <a href="/merchant/item-list" class="nav-link">
+            <i class="bi bi-box-seam"></i>
+            <span>My Products</span>
+        </a>
+
+        <!-- Add Product -->
+        <a href="/merchant/add-item" class="nav-link">
+            <i class="bi bi-plus-circle"></i>
+            <span>Add Product</span>
+        </a>
+
+        <!-- Admin Name -->
+        <div class="nav-user">
+            <i class="bi bi-person-badge"></i>
+            <span>Hi, {{ session.get('admin_name', 'Merchant') }}</span>
+        </div>
+
+        <a href="/merchant-logout" class="btn-login">Logout</a>
+        {% else %}
+        <a href="/merchant-login" class="btn-login">Merchant Login</a>
+        <a href="/merchant-signup" class="btn-login" style="background:transparent; border:1px solid #fff;">Signup</a>
+        {% endif %}
+    </div>
+
+</nav>
+
+<style>
+    .admin-navbar {
+        background: #172337 !important;
+        color: white;
+    }
+
+    .admin-navbar .logo {
+        color: white !important;
+    }
+
+    .admin-badge {
+        background: #fb641b;
+        color: white;
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 2px;
+        margin-left: 8px;
+        font-weight: 600;
+        vertical-align: middle;
+    }
+
+    .admin-badge.super-badge {
+        background: #000;
+    }
+
+    .admin-navbar .nav-link,
+    .admin-navbar .nav-user {
+        color: white !important;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        margin-left: 20px;
+        text-decoration: none;
+    }
+
+    .admin-navbar .nav-link i,
+    .admin-navbar .main-search button i {
+        font-size: 18px;
+        color: white !important;
+    }
+
+    /* Admin Links */
+</style>

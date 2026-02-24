@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Shopping Cart - EKART-EXPRESS{% endblock %}
+
+{% block content %}
+<div class="cart-wrapper">
+
+    <!-- Left: Cart Items -->
+    <div class="cart-left">
+        <div class="cart-header">
+            My Cart ({{ cart|length }})
+        </div>
+
+        {% if not cart %}
+        <div style="padding: 50px; text-align: center;">
+            <img src="https://rukminim2.flixcart.com/www/800/800/promos/16/05/2019/d438a32e-765a-4d8b-b4a6-520b560971e8.png?q=90"
+                width="200" style="margin-bottom: 20px;">
+            <h3 style="margin-bottom: 10px;">Your cart is empty!</h3>
+            <p style="color: #878787; margin-bottom: 20px;">Add items to it now.</p>
+            <a href="/user/products" class="btn-buy-now"
+                style="padding: 12px 60px; text-decoration: none; border-radius: 2px;">Shop Now</a>
+        </div>
+        {% else %}
+
+        {% for pid, item in cart.items() %}
+        <div class="cart-item">
+            <div class="cart-item-img">
+                <img src="/static/uploads/product_images/{{ item.image }}" alt="{{ item.name }}">
+
+                <!-- Quantity Controls -->
+                <div class="quantity-ctrl">
+                    <a href="/user/cart/decrease/{{ pid }}" class="q-btn">-</a>
+                    <div class="q-val">{{ item.quantity }}</div>
+                    <a href="/user/cart/increase/{{ pid }}" class="q-btn">+</a>
+                </div>
+            </div>
+
+            <div class="cart-item-info">
+                <h3 class="cart-item-name">{{ item.name }}</h3>
+                <div class="cart-item-seller">Seller: EKART-EXPRESS</div>
+
+                <div class="cart-item-price-box">
+                    <span class="cart-item-price">₹{{ item.price }}</span>
+                    <span class="pd-mrp">₹{{ (item.price|float / 0.8)|round|int }}</span>
+                    <span class="pd-discount">20% off</span>
+                </div>
+
+                <div style="margin-top: 25px;">
+                    <a href="#" class="remove-btn">Save for later</a>
+                    <a href="/user/cart/remove/{{ pid }}" class="remove-btn">Remove</a>
+                </div>
+            </div>
+
+            <div class="delivery-eta" style="font-size: 14px; text-align: right;">
+                Delivery by 2 Mar, Mon | <span class="ps-green">Free</span>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Spacer for sticky footer -->
+        <div style="height: 120px;"></div>
+
+        <!-- Sticky Place Order Footer -->
+        <div class="cart-footer">
+            <a href="/user/address" class="btn btn-buy-now"
+                style="width: 250px; padding: 12px; text-decoration: none; text-align: center;">
+                PLACE ORDER
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Right: Price Summary -->
+    <div class="cart-right">
+        <div class="price-summary-card">
+            <div class="ps-header">Price Details</div>
+
+            <div class="ps-body">
+                <div class="ps-row">
+                    <span>Price ({{ cart|length }} items)</span>
+                    <span>₹{{ total_mrp|int }}</span>
+                </div>
+
+                <div class="ps-row">
+                    <span>Discount</span>
+                    <span class="ps-green">- ₹{{ total_discount|int }}</span>
+                </div>
+
+                <div class="ps-row">
+                    <span>Delivery Charges</span>
+                    <span class="ps-green">FREE</span>
+                </div>
+
+                <div class="ps-row ps-total-row">
+                    <span>Total Amount</span>
+                    <span>₹{{ grand_total|int }}</span>
+                </div>
+
+                <div class="ps-green" style="font-weight: 600; font-size: 14px; margin-top: 15px;">
+                    You will save ₹{{ total_discount|int }} on this order
+                </div>
+            </div>
+        </div>
+
+        <div
+            style="margin-top: 20px; display: flex; align-items: center; gap: 10px; color: #878787; font-size: 14px; padding: 0 10px;">
+            <i class="bi bi-shield-check" style="font-size: 25px;"></i>
+            Safe and Secure Payments. 100% Authentic products.
+        </div>
+    </div>
+
+</div>
+{% endblock %}

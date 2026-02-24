@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment - EKART-EXPRESS{% endblock %}
+
+{% block content %}
+<div class="cart-wrapper">
+
+    <!-- Left: Payment Stepper -->
+    <div class="cart-left">
+
+        <!-- Step 1: Login (Completed) -->
+        <div class="stepper-item completed">
+            <div class="stepper-header">
+                <div class="sh-left">
+                    <span class="step-num">1</span>
+                    <span class="step-title">LOGIN</span>
+                    <i class="bi bi-check-lg sh-check"></i>
+                </div>
+                <!-- <button class="sh-change">CHANGE</button> -->
+            </div>
+            <div class="stepper-body-info">
+                {{ session.get('user_name', 'User') }} (Logged In)
+            </div>
+        </div>
+
+        <!-- Step 2: Delivery Address (Completed) -->
+        <div class="stepper-item completed">
+            <div class="stepper-header">
+                <div class="sh-left">
+                    <span class="step-num">2</span>
+                    <span class="step-title">DELIVERY ADDRESS</span>
+                    <i class="bi bi-check-lg sh-check"></i>
+                </div>
+                <button class="sh-change" onclick="window.location.href='/user/address';">CHANGE</button>
+            </div>
+            <div class="stepper-body-info">
+                {{ addr.name }} | {{ addr.phone }} | {{ addr.address }}, {{ addr.city }} - {{ addr.pincode }}
+            </div>
+        </div>
+
+        <!-- Step 3: Order Summary (Completed) -->
+        <div class="stepper-item completed">
+            <div class="stepper-header">
+                <div class="sh-left">
+                    <span class="step-num">3</span>
+                    <span class="step-title">ORDER SUMMARY</span>
+                    <i class="bi bi-check-lg sh-check"></i>
+                </div>
+                <button class="sh-change" onclick="window.location.href='/user/cart';">CHANGE</button>
+            </div>
+            <div class="stepper-body-info">
+                {{ cart|length }} items in your order
+            </div>
+        </div>
+
+        <!-- Step 4: Payment Options (Active) -->
+        <div class="stepper-item active">
+            <div class="stepper-header active">
+                <div class="sh-left">
+                    <span class="step-num">4</span>
+                    <span class="step-title">PAYMENT OPTIONS</span>
+                </div>
+            </div>
+
+            <div class="stepper-content">
+                <div class="payment-option active">
+                    <i class="bi bi-record-circle-fill" style="color: #2874f0; font-size: 20px;"></i>
+                    <div style="flex-grow: 1;">
+                        <div style="font-weight: 600;">Razorpay (Cards, UPI, NetBanking)</div>
+                        <div style="font-size: 12px; color: #878787;">Safe and Secure Payments</div>
+                    </div>
+                </div>
+
+                <div class="payment-option disabled" style="opacity: 0.6; cursor: not-allowed;">
+                    <i class="bi bi-circle" style="color: #878787; font-size: 20px;"></i>
+                    <div style="flex-grow: 1;">
+                        <div style="font-weight: 600;">Cash on Delivery</div>
+                        <div style="font-size: 12px; color: #878787;">Not available for this order</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px; display: flex; justify-content: flex-end;">
+                    <button id="rzp-button" class="btn btn-buy-now"
+                        style="width: 250px; padding: 15px; border-radius: 2px;">
+                        PAY ₹{{ amount|int }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: Price Summary -->
+    <div class="cart-right">
+        <div class="price-summary-card">
+            <div class="ps-header">Price Details</div>
+
+            <div class="ps-body">
+                <div class="ps-row">
+                    <span>Price ({{ cart|length }} items)</span>
+                    <span>₹{{ total_mrp|int }}</span>
+                </div>
+
+                <div class="ps-row">
+                    <span>Discount</span>
+                    <span class="ps-green">- ₹{{ total_discount|int }}</span>
+                </div>
+
+                <div class="ps-row">
+                    <span>Delivery Charges</span>
+                    <span class="ps-green">FREE</span>
+                </div>
+
+                <div class="ps-row ps-total-row">
+                    <span>Total Amount</span>
+                    <span>₹{{ amount|int }}</span>
+                </div>
+
+                <div class="ps-green" style="font-weight: 600; font-size: 14px; margin-top: 15px;">
+                    You will save ₹{{ total_discount|int }} on this order
+                </div>
+            </div>
+        </div>
+
+        <div
+            style="margin-top: 20px; display: flex; align-items: center; gap: 10px; color: #878787; font-size: 14px; padding: 0 10px;">
+            <i class="bi bi-shield-check" style="font-size: 25px;"></i>
+            Safe and Secure Payments. 100% Authentic products.
+        </div>
+    </div>
+
+</div>
+
+<!-- CSS for Stepper -->
+<style>
+    .stepper-item {
+        background: #fff;
+        margin-bottom: 15px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    body.dark .stepper-item {
+        background: #111;
+    }
+
+    .stepper-header {
+        padding: 10px 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+
+    .stepper-header.active {
+        background: #2874f0;
+        color: #fff;
+    }
+
+    .sh-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .step-num {
+        background: #f0f0f0;
+        color: #2874f0;
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 2px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .stepper-header.active .step-num {
+        background: #fff;
+    }
+
+    .step-title {
+        font-weight: 600;
+        color: #878787;
+        font-size: 16px;
+    }
+
+    .stepper-header.active .step-title {
+        color: #fff;
+    }
+
+    .sh-check {
+        color: #2874f0;
+        font-size: 20px;
+    }
+
+    .sh-change {
+        background: transparent;
+        border: 1px solid #f0f0f0;
+        color: #2874f0;
+        padding: 6px 15px;
+        font-weight: 600;
+        font-size: 14px;
+        border-radius: 2px;
+        cursor: pointer;
+    }
+
+    .stepper-body-info {
+        padding: 10px 25px 20px 62px;
+        font-size: 14px;
+        color: #212121;
+        font-weight: 500;
+    }
+
+    body.dark .stepper-body-info {
+        color: #fff;
+    }
+
+    .stepper-content {
+        padding: 25px;
+    }
+</style>
+
+<!-- Razorpay Integration -->
+<form action="/verify-payment" method="POST" id="razorpay-form">
+    <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id">
+    <input type="hidden" name="razorpay_order_id" id="razorpay_order_id">
+    <input type="hidden" name="razorpay_signature" id="razorpay_signature">
+</form>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    var options = {
+        "key": "{{ key_id }}",
+        "amount": "{{ amount * 100 }}",
+        "currency": "INR",
+        "name": "EKART-EXPRESS",
+        "description": "Premium Order Payment",
+        "order_id": "{{ order_id }}",
+
+        "handler": function (response) {
+            document.getElementById("razorpay_payment_id").value = response.razorpay_payment_id;
+            document.getElementById("razorpay_order_id").value = response.razorpay_order_id;
+            document.getElementById("razorpay_signature").value = response.razorpay_signature;
+            document.getElementById("razorpay-form").submit();
+        },
+
+        "theme": { "color": "#2874f0" }
+    };
+
+    var rzp1 = new Razorpay(options);
+
+    document.getElementById('rzp-button').onclick = function (e) {
+        rzp1.open();
+        e.preventDefault();
+    }
+</script>
+{% endblock %}

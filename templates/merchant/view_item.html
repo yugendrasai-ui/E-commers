@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+
+{% block title %}Product Details - Seller Central{% endblock %}
+
+{% block content %}
+<div class="admin-view-container">
+    <div class="admin-view-card">
+
+        <div class="av-left">
+            <img src="/static/uploads/product_images/{{ product.image }}" alt="{{ product.name }}">
+        </div>
+
+        <div class="av-right">
+            <div class="av-header">
+                <span class="category-tag">{{ product.category }}</span>
+                <h1>{{ product.name }}</h1>
+            </div>
+
+            <div class="av-price-box">
+                <span class="price-val">₹{{ product.price }}</span>
+                <span class="discount-pill">Seller Listing</span>
+            </div>
+
+            <div class="av-description">
+                <h3>Description</h3>
+                <p>{{ product.description }}</p>
+            </div>
+
+            <div class="av-meta">
+                <div class="meta-item">
+                    <strong>Product ID:</strong> #{{ product.product_id }}
+                </div>
+                <div class="meta-item">
+                    <strong>Listed On:</strong> {{ product.created_at if product.created_at else 'N/A' }}
+                </div>
+            </div>
+
+            <div class="av-footer">
+                <a href="/merchant/item-list" class="btn-back">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+                <div class="footer-actions">
+                    <a href="/merchant/update-item/{{ product.product_id }}" class="btn-edit-action">
+                        <i class="bi bi-pencil-square"></i> Edit Product
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .admin-view-container {
+        padding: 50px 0;
+        display: flex;
+        justify-content: center;
+    }
+
+    .admin-view-card {
+        background: #fff;
+        width: 100%;
+        max-width: 900px;
+        display: grid;
+        grid-template-columns: 400px 1fr;
+        gap: 40px;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    body.dark .admin-view-card {
+        background: #111;
+        box-shadow: 0 2px 12px rgba(255, 255, 255, 0.05);
+    }
+
+    .av-left img {
+        width: 100%;
+        border-radius: 4px;
+        border: 1px solid #f0f0f0;
+    }
+
+    body.dark .av-left img {
+        border-color: #333;
+    }
+
+    .category-tag {
+        display: inline-block;
+        background: #f0f0f0;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #878787;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+    }
+
+    body.dark .category-tag {
+        background: #222;
+    }
+
+    .av-header h1 {
+        margin: 0;
+        font-size: 24px;
+        line-height: 1.4;
+    }
+
+    .av-price-box {
+        margin: 20px 0;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .price-val {
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+    .discount-pill {
+        background: #388e3c;
+        color: white;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 8px;
+        border-radius: 2px;
+    }
+
+    .av-description {
+        border-top: 1px solid #f0f0f0;
+        padding-top: 20px;
+        margin-top: 20px;
+    }
+
+    body.dark .av-description {
+        border-color: #333;
+    }
+
+    .av-description h3 {
+        font-size: 16px;
+        margin-bottom: 10px;
+        color: #878787;
+    }
+
+    .av-description p {
+        font-size: 15px;
+        line-height: 1.6;
+        color: #212121;
+    }
+
+    body.dark .av-description p {
+        color: #ccc;
+    }
+
+    .av-meta {
+        margin-top: 30px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        font-size: 14px;
+        color: #878787;
+    }
+
+    .av-footer {
+        margin-top: auto;
+        padding-top: 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn-back {
+        text-decoration: none;
+        color: #2874f0;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-edit-action {
+        background: #fb641b;
+        color: white;
+        text-decoration: none;
+        padding: 12px 25px;
+        font-weight: 600;
+        border-radius: 2px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, .2);
+    }
+</style>
+{% endblock %}

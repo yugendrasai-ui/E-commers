@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Merchant Login - Express-Kart{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h2>Merchant Login</h2>
+      <p>Access your seller central dashboard.</p>
+    </div>
+
+    <!-- Flash messages -->
+    <div class="auth-messages">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      {% for category, message in messages %}
+      <div class="flash flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
+      {% endif %}
+      {% endwith %}
+    </div>
+
+    <form method="POST" action="/merchant-login" class="auth-body">
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" name="email" placeholder="Enter your email" required>
+      </div>
+
+      <div class="form-group">
+        <div class="label-row">
+          <label>Password</label>
+          <a href="/forgot-password?type=merchant" class="link-small">Forgot?</a>
+        </div>
+        <input type="password" name="password" placeholder="Enter password" required>
+      </div>
+
+      <button type="submit" class="btn-auth">Login as Merchant</button>
+    </form>
+
+    <div class="auth-footer">
+      <p>New Merchant? <a href="/merchant-signup">Register here</a></p>
+      <div class="divider"><span>OR</span></div>
+      <p>Are you a Customer? <a href="/user-login">Login here</a></p>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

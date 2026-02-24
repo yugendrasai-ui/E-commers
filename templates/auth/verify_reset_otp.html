@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify Reset OTP - Express-Kart{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h2>Verify OTP</h2>
+            <p>Verification code sent to your email.</p>
+        </div>
+
+        <div class="auth-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+
+        <form method="POST" class="auth-body">
+            <div class="form-group">
+                <label>Enter 6-Digit OTP</label>
+                <input type="text" name="otp" placeholder="000000" maxlength="6" pattern="\d{6}" required>
+            </div>
+
+            <button type="submit" class="btn-auth">Verify OTP</button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Incorrect email? <a href="/forgot-password">Change email</a></p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

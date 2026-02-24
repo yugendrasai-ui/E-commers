@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }} - EKART-EXPRESS{% endblock %}
+
+{% block content %}
+<div class="pd-wrapper">
+
+    <!-- Left Section: Image and Actions -->
+    <div class="pd-left">
+        <div class="pd-main-img">
+            <img src="/static/uploads/product_images/{{ product.image }}" alt="{{ product.name }}">
+        </div>
+
+        <div class="pd-actions">
+            <!-- Add to Cart Form -->
+            <form action="/user/add-to-cart/{{ product.product_id }}" method="GET" style="display: contents;">
+                <button type="submit" class="btn btn-add-cart">
+                    <i class="bi bi-cart-plus-fill"></i> ADD TO CART
+                </button>
+            </form>
+
+            <!-- Buy Now Button (Direct Checkout) -->
+            <a href="/user/buy/{{ product.product_id }}" class="btn btn-buy-now">
+                <i class="bi bi-lightning-fill"></i> BUY NOW
+            </a>
+        </div>
+    </div>
+
+    <!-- Right Section: Product Info -->
+    <div class="pd-right">
+
+        <nav class="pd-breadcrumb">
+            <span class="pd-category">{{ product.category }}</span>
+        </nav>
+
+        <h1 class="pd-name">{{ product.name }}</h1>
+
+        <!-- Rating -->
+        {% set base_rating = (product.product_id * 7 % 20) / 10 + 3.0 %}
+        {% set rating = base_rating | round(1) %}
+        <div class="pd-rating">
+            <div class="rating-badge">
+                {{ rating }} <i class="fa-solid fa-star" style="font-size: 10px;"></i>
+            </div>
+            <span style="color: #878787; font-size: 14px; font-weight: 500;">3,440 Ratings & 456 Reviews</span>
+        </div>
+
+        <!-- Pricing Section -->
+        <div class="pd-price-section">
+            <span class="pd-price">₹{{ product.price }}</span>
+            <span class="pd-mrp">₹{{ (product.price|float / 0.8)|round|int }}</span>
+            <span class="pd-discount">20% off</span>
+        </div>
+
+        <!-- Available Offers -->
+        <div class="pd-offers">
+            <h3 class="offer-title">Available offers</h3>
+
+            <div class="offer-item">
+                <i class="bi bi-tag-fill offer-icon"></i>
+                <span><b>Bank Offer</b> 10% off on Canara Bank Credit Card Transactions, up to ₹1,500 on orders of
+                    ₹5,000 and above <a href="#" class="offer-link">T&C</a></span>
+            </div>
+
+            <div class="offer-item">
+                <i class="bi bi-tag-fill offer-icon"></i>
+                <span><b>Bank Offer</b> 10% off on ICICI Bank Credit Card Transactions, up to ₹1250 on orders of ₹5,000
+                    and above <a href="#" class="offer-link">T&C</a></span>
+            </div>
+
+            <div class="offer-item">
+                <i class="bi bi-tag-fill offer-icon"></i>
+                <span><b>Bank Offer</b> 10% off on ICICI Bank Credit Card EMI Transactions, up to ₹1500 on orders of
+                    ₹5,000 and above <a href="#" class="offer-link">T&C</a></span>
+            </div>
+
+            <div class="offer-item">
+                <i class="bi bi-calendar-event offer-icon"></i>
+                <span><b>Special Price</b> Get extra 15% off (price inclusive of cashback/coupon) <a href="#"
+                        class="offer-link">T&C</a></span>
+            </div>
+        </div>
+
+        <!-- "Buy at" Special Price Card -->
+        <div class="buy-at-card">
+            <div class="buy-at-info">
+                <h4>Buy at ₹{{ (product.price|float * 0.95)|round|int }}</h4>
+                <p>with ICICI Bank Credit Card</p>
+            </div>
+            <div class="buy-at-price">
+                <i class="bi bi-chevron-right"></i>
+            </div>
+        </div>
+
+        <!-- Specifications / Description -->
+        <div class="pd-details-tabs">
+            <h3 class="offer-title">Product Description</h3>
+            <p style="font-size: 14px; color: #212121; line-height: 1.6; margin-bottom: 20px;">
+                {{ product.description }}
+            </p>
+
+            <h3 class="offer-title">Specifications</h3>
+            <div class="pd-specs">
+                <div class="specs-row">
+                    <div class="spec-label">Model Name</div>
+                    <div class="spec-value">{{ product.name }}</div>
+                </div>
+                <div class="specs-row">
+                    <div class="spec-label">Category</div>
+                    <div class="spec-value">{{ product.category }}</div>
+                </div>
+                <div class="specs-row">
+                    <div class="spec-label">Ideal For</div>
+                    <div class="spec-value">Men, Women, Boys, Girls</div>
+                </div>
+                <div class="specs-row">
+                    <div class="spec-label">Sales Package</div>
+                    <div class="spec-value">1 {{ product.category }}</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

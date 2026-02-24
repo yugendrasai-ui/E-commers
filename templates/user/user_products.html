@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Products{% endblock %}
+
+{% block content %}
+
+<!-- ============================
+   BANNER SLIDER
+============================ -->
+<div class="banner-slider">
+
+  <div class="slides fade">
+    <img src="https://cubeonline.pk/cdn/shop/collections/desktop_banner.jpg?v=1741246478">
+  </div>
+
+  <div class="slides fade">
+    <img
+      src="https://d3jmn01ri1fzgl.cloudfront.net/photoadking/webp_original/shark-new-collection-sale-clothing-banner-template-p3ztild89dffd0.webp">
+  </div>
+
+  <div class="slides fade">
+    <img src="https://wiproappliances.com/cdn/shop/collections/main-offer-banner.jpg?v=1700461224">
+  </div>
+
+</div>
+
+
+<!-- ============================
+   PRODUCTS
+============================ -->
+<div class="product-container">
+
+  {% for product in products %}
+
+  <div class="product-card" onclick="location.href='/user/product/{{ product.product_id }}'">
+
+    <!-- Wishlist Icon -->
+    <div class="wishlist-icon">
+      <i class="fa-regular fa-heart"></i>
+    </div>
+
+    <!-- Image -->
+    <img src="/static/uploads/product_images/{{ product.image }}" alt="{{ product.name }}">
+
+    <!-- Details -->
+    <div class="product-info">
+      <!-- Category -->
+      <p class="category">{{ product.category }}</p>
+
+      <!-- Name -->
+      <h3>{{ product.name }}</h3>
+
+      <!-- Rating System (Dynamic + Half Stars) -->
+      {% set base_rating = (product.product_id * 7 % 20) / 10 + 3.0 %}
+      {% set rating = base_rating | round(1) %}
+      <div class="rating-container">
+        <div class="rating-stars">
+          {% for i in range(1, 6) %}
+          {% if rating >= i %}
+          <i class="fa-solid fa-star"></i>
+          {% elif rating >= (i - 0.5) %}
+          <i class="fa-solid fa-star-half-stroke"></i>
+          {% else %}
+          <i class="fa-regular fa-star"></i>
+          {% endif %}
+          {% endfor %}
+        </div>
+        <div class="rating-number">{{ rating }}</div>
+      </div>
+
+      <!-- Price -->
+      <div class="price-box">
+        <span class="new-price">₹{{ product.price }}</span>
+        <span class="old-price">₹{{ (product.price|float / 0.8)|round|int }}</span>
+        <span class="discount">20% off</span>
+      </div>
+    </div>
+
+
+    <!-- Buttons -->
+    <div class="btn-group">
+      <!-- Add to Cart -->
+      <a href="/user/add-to-cart/{{ product.product_id }}" class="btn-cart" onclick="event.stopPropagation();">
+        Add Cart
+      </a>
+
+      <!-- Buy Now (Links to Direct Checkout) -->
+      <a href="/user/buy/{{ product.product_id }}" class="btn-buy" onclick="event.stopPropagation();">
+        Buy Now
+      </a>
+    </div>
+
+  </div>
+
+  {% endfor %}
+
+</div>
+
+
+<!-- ============================
+   SLIDER SCRIPT
+============================ -->
+<script>
+
+  let slideIndex = 0;
+  showSlides();
+
+  function showSlides() {
+
+    let slides = document.getElementsByClassName("slides");
+
+    for (let i = 0; i < slides.length; i++) {
+      slides[i].style.display = "none";
+    }
+
+    slideIndex++;
+
+    if (slideIndex > slides.length) {
+      slideIndex = 1;
+    }
+
+    slides[slideIndex - 1].style.display = "block";
+
+    setTimeout(showSlides, 3000); // 3 sec
+  }
+
+</script>
+
+{% endblock %}

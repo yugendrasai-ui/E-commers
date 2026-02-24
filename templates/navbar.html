@@ -1,0 +1,119 @@
+<!-- Lordicon CDN -->
+<script src="https://cdn.lordicon.com/lordicon.js"></script>
+
+<nav class="navbar">
+
+    <!-- Left: Logo -->
+    <div class="nav-left">
+        <button id="sidebarToggle" class="mobile-only sidebar-btn">
+            <i class="bi bi-list"></i>
+        </button>
+        <a href="/" class="logo">EXPRESS-KART</a>
+    </div>
+
+    <!-- Center: Search + Category (Amazon Style) -->
+    <form action="/user/products" method="GET" class="nav-search main-search">
+        <select name="category" class="search-category">
+            <option value="">All</option>
+            {% for cat in categories %}
+            <option value="{{ cat.category }}" {% if request.args.get('category')==cat.category %} selected {% endif %}>
+                {{ cat.category }}
+            </option>
+            {% endfor %}
+        </select>
+        <input type="text" name="search" placeholder="Search products..." value="{{ request.args.get('search','') }}">
+        <button type="submit">
+            <i class="bi bi-search"></i>
+        </button>
+    </form>
+
+    <!-- Right: Menu -->
+    <div class="nav-right desktop-only">
+        <!-- Home -->
+        <a href="/" class="nav-link">
+            <span class="icon-wrap">
+                <lord-icon src="https://cdn.lordicon.com/jeuxydnh.json" trigger="hover" colors="primary:#ffffff"
+                    style="width:22px;height:22px">
+                </lord-icon>
+            </span>
+            <span>Home</span>
+        </a>
+
+        <!-- Cart -->
+        <a href="/user/cart" class="nav-link">
+            <span class="icon-wrap">
+                <lord-icon src="https://cdn.lordicon.com/uisoczqi.json" trigger="hover" colors="primary:#ffffff"
+                    style="width:22px;height:22px">
+                </lord-icon>
+            </span>
+            <span>Cart</span>
+        </a>
+
+        <!-- Seller -->
+        <a href="/merchant-login" class="nav-link">
+            <i class="bi bi-shop-window"></i>
+            <span>Become a Seller</span>
+        </a>
+
+        <!-- Dark Mode -->
+        <div class="theme-toggle">
+            <label class="switch">
+                <input type="checkbox" id="darkToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        {% if session.get('user_id') %}
+        <div class="nav-user">
+            <i class="bi bi-person-circle nav-icon"></i>
+            {% set display_name = session.get('user_name', '').split(' ')[0] %}
+            <span>Hi, {{ display_name }}</span>
+        </div>
+        <a href="/user-logout" class="btn-login">Logout</a>
+        {% else %}
+        <a href="/user-login" class="btn-login">Login</a>
+        {% endif %}
+    </div>
+
+    <!-- Mobile Side Menu -->
+    <div id="mobileSidebar" class="mobile-sidebar">
+        <div class="sidebar-header">
+            <div class="logo">EKART-EXPRESS</div>
+            <button id="sidebarClose" class="sidebar-close">&times;</button>
+        </div>
+        <div class="sidebar-content">
+            {% if session.get('user_id') %}
+            <div class="sidebar-user">
+                <i class="bi bi-person-circle"></i>
+                <span>Hi, {{ session.get('user_name', 'User') }}</span>
+            </div>
+            {% endif %}
+
+            <a href="/" class="sidebar-link"><i class="bi bi-house-door"></i> Home</a>
+            <a href="/user/cart" class="sidebar-link"><i class="bi bi-cart3"></i> My Cart</a>
+            <a href="/user/my-orders" class="sidebar-link"><i class="bi bi-bag-check"></i> My Orders</a>
+            <a href="/merchant-login" class="sidebar-link"><i class="bi bi-shop-window"></i> Become a Seller</a>
+
+            <div class="sidebar-divider"></div>
+
+            <div class="sidebar-link theme-toggle-sidebar">
+                <span>Dark Mode</span>
+                <label class="switch">
+                    <input type="checkbox" id="darkToggleMobile">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            {% if session.get('user_id') %}
+            <a href="/user-logout" class="sidebar-link logout"><i class="bi bi-box-arrow-right"></i> Logout</a>
+            {% else %}
+            <a href="/user-login" class="sidebar-link login"><i class="bi bi-box-arrow-in-right"></i> Login /
+                Register</a>
+            {% endif %}
+        </div>
+    </div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+</nav>

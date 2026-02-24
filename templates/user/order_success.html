@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Confirmed - EKART-EXPRESS{% endblock %}
+
+{% block content %}
+<div class="success-container">
+
+    <div class="success-icon">
+        <i class="bi bi-check2-circle"></i>
+    </div>
+
+    <h1 style="color: #212121; font-weight: 500; margin-bottom: 10px;">Order Confirmed!</h1>
+    <p style="color: #878787; font-size: 16px;">
+        Hooray! Your order has been placed successfully.<br>
+        A confirmation email will be sent to your registered email address soon.
+    </p>
+
+    <div class="order-id-box">
+        Order ID: #ORD-{{ order.order_id }}
+    </div>
+
+    <div style="border: 1px solid #f0f0f0; border-radius: 4px; margin-top: 30px; text-align: left;">
+        <div style="padding: 15px 25px; border-bottom: 1px solid #f0f0f0; background: #f9f9f9; font-weight: 600;">
+            Order Details ({{ total_qty }} Items)
+        </div>
+
+        <div style="padding: 0 25px;">
+            <table class="order-summary-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th style="text-align: center;">Qty</th>
+                        <th style="text-align: right;">Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <img src="/static/uploads/product_images/{{ item.image }}" width="50" height="50"
+                                    style="object-fit: contain;">
+                                <span>{{ item.name }}</span>
+                            </div>
+                        </td>
+                        <td style="text-align: center;">{{ item.quantity }}</td>
+                        <td style="text-align: right; font-weight: 500;">₹{{ item.price }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="2" style="padding: 20px 0; font-weight: 600; font-size: 18px;">Total Amount Paid
+                        </td>
+                        <td
+                            style="padding: 20px 0; text-align: right; font-weight: 600; font-size: 18px; color: #212121;">
+                            ₹{{ order.amount|int }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <div style="margin-top: 40px; display: flex; justify-content: center; gap: 20px;">
+        <a href="/user/products" class="btn-delivery"
+            style="background: #2874f0; text-decoration: none; padding: 15px 40px;">
+            CONTINUE SHOPPING
+        </a>
+        <a href="/user/my-orders" class="btn-delivery"
+            style="background: #fb641b; text-decoration: none; padding: 15px 40px;">
+            MY ORDERS
+        </a>
+    </div>
+
+</div>
+{% endblock %}

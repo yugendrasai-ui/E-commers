@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Merchant Registration - Express-Kart{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h2>Merchant Registration</h2>
+      <p>Start selling on Express-Kart today.</p>
+    </div>
+
+    <div class="auth-messages">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      {% for category, message in messages %}
+      <div class="flash flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
+      {% endif %}
+      {% endwith %}
+    </div>
+
+    <form method="POST" action="/merchant-signup" class="auth-body" onsubmit="showLoading()">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" name="name" placeholder="Enter your business/full name" required>
+      </div>
+
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" name="email" placeholder="Enter your email" required>
+      </div>
+
+      <button type="submit" class="btn-auth">Send Verification OTP</button>
+    </form>
+
+    <script>
+      // Hide loading if page loads (e.g. on validation error redirect)
+      window.onload = function () {
+        if (typeof hideLoading === 'function') hideLoading();
+      };
+    </script>
+
+
+    <div class="auth-footer">
+      <p>Already a Merchant? <a href="/merchant-login">Login here</a></p>
+      <div class="divider"><span>OR</span></div>
+      <p>Want to buy? <a href="/user-login">User Login</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- Reusing common auth styles from login.html since both use block content and base.html -->
+{% endblock %}

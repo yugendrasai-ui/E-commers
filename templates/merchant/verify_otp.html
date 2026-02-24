@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify OTP - Express-Kart{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h2>Verify Identity</h2>
+      <p>OTP sent to: <strong>{{ session.get('signup_email') or session.get('otp_email') }}</strong></p>
+    </div>
+
+    <div class="auth-messages">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      {% for category, message in messages %}
+      <div class="flash flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
+      {% endif %}
+      {% endwith %}
+    </div>
+
+    <form method="POST" action="/verify-otp" class="auth-body">
+      <div class="form-group">
+        <label>Enter 6-Digit OTP</label>
+        <input type="text" name="otp" placeholder="000000" maxlength="6" pattern="\d{6}" required
+          style="text-align: center; font-size: 24px; letter-spacing: 10px;">
+      </div>
+
+      <div class="form-group">
+        <label>Set Password</label>
+        <input type="password" name="password" placeholder="Create a strong password" required>
+      </div>
+
+      <button type="submit" class="btn-auth">
+        {% if session.get('signup_role') == 'user' %}Create Account{% else %}Register Merchant{% endif %}
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <p>Didn't get code? <a href="#" onclick="alert('Please refresh the page to resend')">Resend OTP</a></p>
+    </div>
+  </div>
+</div>
+{% endblock %}
