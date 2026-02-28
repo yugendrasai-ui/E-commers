@@ -13,9 +13,11 @@ f:\FlaskApp\Ecommers
 │   init_db.py              # Database initialization script
 │   ecommerce.db            # SQLite database file
 │   requirements.txt        # Project dependencies
-│   README.md               # Quick start guide
-│   DOCUMENTATION.md        # Comprehensive technical documentation
-│   Ecommers_Project_Documentation.pdf # Exported documentation
+├───projects_document/      # Project documentation and guides
+│   ├───README.md           # Quick start guide
+│   ├───DOCUMENTATION.md    # Comprehensive technical documentation
+│   ├───deployment_guide.md # PythonAnywhere deployment steps
+│   └───Ecommers_Project_Documentation.pdf # Exported PDF
 │
 ├───static/                 # Static assets
 │   ├───css/                # Stylesheets (style.css, auth.css, super_admin.css)
