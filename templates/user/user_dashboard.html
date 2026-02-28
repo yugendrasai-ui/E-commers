@@ -1,28 +1,91 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>User Dashboard</title>
-</head>
-<body>
+{% extends 'base.html' %}
 
-<!-- Flash Messages -->
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% for category, message in messages %}
-    <p style="color:green;">{{ message }}</p>
-  {% endfor %}
-{% endwith %}
+{% block title %}My Dashboard - EKART-EXPRESS{% endblock %}
 
-<h2>Welcome, {{ user_name }}!</h2>
+{% block content %}
+<div class="ud-container">
+  <div class="ud-header">
+    <h1 class="ud-welcome">Welcome back, {{ user_name }}!</h1>
+    <p style="color: #878787;">Here's what's happening with your account today.</p>
+  </div>
 
-<a href="/user/products">Browse Products</a><br><br> 
+  <!-- Stats Grid -->
+  <div class="ud-stats-grid">
+    <div class="ud-stat-card">
+      <div class="ud-stat-info">
+        <h3>Total Orders</h3>
+        <div class="value">{{ order_count }}</div>
+      </div>
+      <div class="ud-stat-icon">
+        <i class="bi bi-box-seam"></i>
+      </div>
+    </div>
+    <div class="ud-stat-card">
+      <div class="ud-stat-info">
+        <h3>Total Spent</h3>
+        <div class="value">₹{{ "{:,.2f}".format(total_spent) }}</div>
+      </div>
+      <div class="ud-stat-icon" style="background: #e7f9ed; color: #388e3c;">
+        <i class="bi bi-wallet2"></i>
+      </div>
+    </div>
+    <div class="ud-stat-card">
+      <div class="ud-stat-info">
+        <h3>Items in Cart</h3>
+        <div class="value">{{ session.get('cart', {})|length }}</div>
+      </div>
+      <div class="ud-stat-icon" style="background: #fff4e5; color: #fb641b;">
+        <i class="bi bi-cart3"></i>
+      </div>
+    </div>
+  </div>
 
-<br><br>
-<a href="/user-logout">Logout</a>
+  <div class="ud-content-grid">
+    <!-- Main Area: Activity & Notifications -->
+    <div class="ud-card">
+      <h2 class="ud-card-title">Recent Notifications</h2>
 
-<br><br>
-<a href="/user/cart">
-    Cart <span id="cart-count">{{ session.get('cart')|length if session.get('cart') else 0 }}</span>
-</a>
+      {% if recent_orders %}
+      {% for order in recent_orders %}
+      <div class="ud-notification">
+        <i class="bi bi-bell-fill"></i>
+        <div>
+          <strong>Order Placed Successfully!</strong>
+          <p style="margin: 0; font-size: 13px; color: #666;">Your order #ORD-{{ order.order_id }} has been received and
+            is being processed.</p>
+          <small style="color: #999;">{{ order.created_at | strftime }}</small>
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div style="text-align: center; padding: 40px 0; color: #878787;">
+        <i class="bi bi-info-circle" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
+        No recent notifications.
+      </div>
+      {% endif %}
+    </div>
 
-</body>
-</html>
+    <!-- Sidebar: Recent Orders -->
+    <div class="ud-card">
+      <div class="ud-card-title">
+        Recent Orders
+        <a href="/user/my-orders">View All</a>
+      </div>
+
+      {% for order in recent_orders %}
+      <a href="/user/order-success/{{ order.order_id }}" class="ud-order-row">
+        <img src="/static/uploads/product_images/{{ order.product_image }}" class="ud-order-img">
+        <div class="ud-order-info">
+          <h4>{{ order.product_name[:30] }}{{ '...' if order.product_name|length > 30 }}</h4>
+          <p>₹{{ order.amount|int }} | {{ order.created_at | strftime('%b %d') }}</p>
+        </div>
+      </a>
+      {% endfor %}
+
+      {% if not recent_orders %}
+      <p style="text-align: center; color: #878787; padding-top: 20px;">No orders yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

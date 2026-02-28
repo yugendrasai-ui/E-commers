@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin Dashboard - Express-Kart</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='super_admin.css') }}">
+    <!-- Load Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Dashboard specific charts */
+        .dashboard-row {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: var(--card-shadow);
+            flex: 1 1 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .chart-card h3 {
+            margin-bottom: 1.5rem;
+            color: #3a3b45;
+            font-size: 1.1rem;
+            align-self: flex-start;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: var(--card-shadow);
+            border-left: 4px solid var(--primary-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card.users {
+            border-left-color: var(--info-color);
+        }
+
+        .stat-card.merchants {
+            border-left-color: var(--warning-color);
+        }
+
+        .stat-card.revenue {
+            border-left-color: var(--success-color);
+        }
+
+        .stat-title {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-card.users .stat-title {
+            color: var(--info-color);
+        }
+
+        .stat-card.merchants .stat-title {
+            color: var(--warning-color);
+        }
+
+        .stat-card.revenue .stat-title {
+            color: var(--success-color);
+        }
+
+        .stat-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #5a5c69;
+        }
+
+        .stat-icon {
+            position: absolute;
+            right: 1.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2rem;
+            color: #dddfeb;
+        }
+
+        .recent-orders-card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: var(--card-shadow);
+            flex: 2 1 400px;
+            width: 100%;
+        }
+
+        .card-header {
+            padding: 1rem 1.5rem;
+            background: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-row {
+                flex-direction: column;
+            }
+
+            .recent-orders-card {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    {% include 'super_admin_navbar.html' %}
+
+    <div class="main-content">
+        <div class="header"
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h1 style="font-size: 1.75rem; color: #3a3b45; font-weight: 700;">Dashboard Overview</h1>
+            <div style="color: #858796; font-size: 0.9rem;">Express-Kart / <strong>Super Admin</strong></div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div style="background: #d1e7dd; color: #0f5132; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
+            {{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <!-- Section for New Merchants (MOVED TO TOP) -->
+        {% if new_merchants %}
+        <div style="margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
+                <h2 style="font-size: 1.1rem; color: #3a3b45; font-weight: 700; margin: 0;">Pending Applications</h2>
+                <span class="badge badge-notify" style="position: static; padding: 0.2rem 0.6rem;">{{
+                    new_merchants|length }} New</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+                {% for merchant in new_merchants %}
+                <div
+                    style="background: #fff; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #fb641b; box-shadow: var(--card-shadow); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 700;">{{ merchant.name }}</div>
+                        <div style="font-size: 0.75rem; color: #858796;">New Seller Registration</div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <a href="/super-admin/approve-merchant/{{ merchant.admin_id }}" class="btn-action btn-approve"
+                            style="margin-right:0; padding: 0.3rem 0.8rem; font-size: 0.75rem;">Approve</a>
+                        <a href="/super-admin/reject-merchant/{{ merchant.admin_id }}" class="btn-action btn-block"
+                            style="margin-right:0; padding: 0.3rem 0.8rem; font-size: 0.75rem;"
+                            onclick="return confirm('Reject this application?')">Decline</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">Products</div>
+                <div class="stat-value">{{ total_products }}</div>
+                <div class="stat-icon"><i class="fas fa-boxes"></i></div>
+            </div>
+            <div class="stat-card users">
+                <div class="stat-title">Active Users</div>
+                <div class="stat-value">{{ total_users }}</div>
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+            </div>
+            <div class="stat-card merchants">
+                <div class="stat-title">Merchants</div>
+                <div class="stat-value">{{ total_merchants }}</div>
+                <div class="stat-icon"><i class="fas fa-store"></i></div>
+            </div>
+            <div class="stat-card revenue">
+                <div class="stat-title">Total Revenue</div>
+                <div class="stat-value">₹{{ "{:,.0f}".format(total_revenue) }}</div>
+                <div class="stat-icon"><i class="fas fa-coins"></i></div>
+            </div>
+        </div>
+
+        <div class="dashboard-row">
+            <!-- Recent Activity -->
+            <div class="recent-orders-card">
+                <div class="card-header">
+                    <h3>Recent Transactions</h3>
+                    <span style="font-size: 0.75rem; color: #858796;">Last 10 orders</span>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td><strong>#{{ order.order_id }}</strong></td>
+                                <td>{{ order.customer_name }}</td>
+                                <td>₹{{ "{:,.2f}".format(order.amount) }}</td>
+                                <td><span class="status-pill status-active">{{ order.payment_status | upper }}</span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 2rem; color: #858796;">No orders
+                                    found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="chart-card">
+                <h3>Inventory Distribution</h3>
+                <div style="width: 100%; max-width: 250px;">
+                    <canvas id="categoryPieChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div id="toast-container"></div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                // --- Notification Polling Logic ---
+                let lastMaxId = 0;
+                const notifyBadgeMobile = document.getElementById('mobile-notify-badge');
+                const notifyBadgeSidebar = document.getElementById('sidebar-notify-badge');
+                const toastContainer = document.getElementById('toast-container');
+
+                function showToast(merchant) {
+                    const toast = document.createElement('div');
+                    toast.className = 'admin-toast';
+                    toast.innerHTML = `
+                    <i class="fas fa-store-alt"></i>
+                    <div>
+                        <div class="toast-title">New Merchant Registered</div>
+                        <div class="toast-body">${merchant.name} has applied for a seller account.</div>
+                    </div>
+                `;
+                    toast.onclick = () => window.location.href = '/super-admin/merchants';
+                    toastContainer.appendChild(toast);
+
+                    setTimeout(() => {
+                        toast.style.animation = 'fadeOut 0.5s ease-in forwards';
+                        setTimeout(() => toast.remove(), 500);
+                    }, 8000);
+                }
+
+                function checkNotifications() {
+                    fetch('/super-admin/api/notifications')
+                        .then(response => response.json())
+                        .then(data => {
+                            const count = data.unseen_count;
+                            const merchants = data.merchants;
+
+                            if (count > 0) {
+                                if (notifyBadgeMobile) {
+                                    notifyBadgeMobile.innerText = count;
+                                    notifyBadgeMobile.style.display = 'block';
+                                }
+                                if (notifyBadgeSidebar) {
+                                    notifyBadgeSidebar.innerText = count;
+                                    notifyBadgeSidebar.style.display = 'inline-block';
+                                }
+                            } else {
+                                if (notifyBadgeMobile) notifyBadgeMobile.style.display = 'none';
+                                if (notifyBadgeSidebar) notifyBadgeSidebar.style.display = 'none';
+                            }
+
+                            if (merchants.length > 0) {
+                                const currentMaxId = Math.max(...merchants.map(m => m.admin_id));
+                                if (lastMaxId === 0) {
+                                    lastMaxId = currentMaxId;
+                                } else if (currentMaxId > lastMaxId) {
+                                    merchants.forEach(m => {
+                                        if (m.admin_id > lastMaxId) {
+                                            showToast(m);
+                                        }
+                                    });
+                                    lastMaxId = currentMaxId;
+                                }
+                            }
+                        })
+                        .catch(err => console.error('Notification check failed:', err));
+                }
+
+                checkNotifications();
+                setInterval(checkNotifications, 30000);
+
+                // --- Chart.js ---
+                const ctx = document.getElementById('categoryPieChart').getContext('2d');
+                const labels = [];
+                const counts = [];
+
+                {% for item in category_data %}
+                labels.push("{{ item['category'] }}");
+                counts.push({{ item['count'] or 0 }});
+            {% endfor %}
+
+            if (ctx && labels.length > 0) {
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: counts,
+                            backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#5a5c69', '#2e59d9'],
+                            hoverBackgroundColor: ['#2e59d9', '#17a673', '#2c9faf', '#dda20a', '#be2617', '#60616f', '#373840', '#1a3eb3'],
+                            hoverBorderColor: "rgba(234, 236, 244, 1)",
+                        }],
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15, font: { size: 11 } } },
+                            tooltip: { backgroundColor: "white", bodyColor: "#858796", borderColor: '#dddfeb', borderWidth: 1 }
+                        },
+                        cutout: '70%',
+                    },
+                });
+            }
+        });
+        </script>
+</body>
+
+</html>

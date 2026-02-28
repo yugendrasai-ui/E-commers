@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users - Express-Kart</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='super_admin.css') }}">
+</head>
+
+<body>
+    {% include 'super_admin_navbar.html' %}
+
+    <div class="main-content">
+        <div class="header"
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h1 style="font-size: 1.75rem; color: #3a3b45; font-weight: 700;">Customer Management</h1>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div style="background: #d1e7dd; color: #0f5132; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
+            {{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="table-card">
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="min-width:40px;">ID</th>
+                            <th style="min-width:120px;">Customer Name</th>
+                            <th style="min-width:160px;">Email Address</th>
+                            <th style="min-width:85px;">Account Status</th>
+                            <th style="min-width:130px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>#{{ user.user_id }}</td>
+                            <td><strong>{{ user.name }}</strong></td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                <span
+                                    class="status-pill {% if user.status == 'active' %}status-active{% else %}status-blocked{% endif %}"
+                                    style="white-space: nowrap;">
+                                    {{ user.status | upper }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="/super-admin/user-history/{{ user.user_id }}"
+                                    class="btn-action btn-history">History</a>
+                                {% if user.status == 'active' %}
+                                <a href="/super-admin/block-user/{{ user.user_id }}" class="btn-action btn-block"
+                                    onclick="return confirm('Block this customer account?')">Block</a>
+                                {% else %}
+                                <a href="/super-admin/unblock-user/{{ user.user_id }}"
+                                    class="btn-action btn-unblock">Unblock</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 2rem; color: #858796;">No customers
+                                registered yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

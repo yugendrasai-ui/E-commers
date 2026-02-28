@@ -12,11 +12,37 @@
     <!-- Main CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1.2">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='auth.css') }}?v=1.1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='auth.css') }}?v=2.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+
+    <!-- Early dark mode init: runs BEFORE page renders to prevent light flash -->
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark-init');
+            }
+        })();
+    </script>
+    <style>
+        /* Applied instantly by JS before CSS loads */
+        html.dark-init body {
+            background: #121212 !important;
+        }
+
+        html.dark-init {
+            background: #121212;
+        }
+    </style>
 </head>
 
-<body>
+<body class="{% if request.path.startswith('/merchant/') %}merchant-body{% endif %}">
+    <script>
+        // Apply class to body immediately to prevent theme flickering
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark');
+        }
+    </script>
     <!-- Global Loading Overlay -->
     <div id="loading-overlay" class="loading-overlay">
         <div class="spinner"></div>
@@ -50,7 +76,13 @@
     <div class="container">
         {% block content %}{% endblock %}
     </div>
+
+    {% if not session.get('merchant_id') %}
+    {% include 'footer.html' %}
+    {% endif %}
+
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+    {% block scripts %}{% endblock %}
 </body>
 
 </html>

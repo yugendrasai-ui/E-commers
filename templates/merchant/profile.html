@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% block title %}Seller Profile - Business Central{% endblock %}
+
+{% block content %}
+<div class="profile-page-wrap" style="max-width: 800px; margin: 40px auto; padding: 0 10px;">
+    <div class="profile-card">
+        <div class="profile-header" style="background: #172337; padding: 30px 20px; text-align: center; color: white;">
+            <div class="profile-avatar"
+                style="width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 35px; color: #fb641b;">
+                <i class="bi bi-shop"></i>
+            </div>
+            <h1 style="margin: 0; font-size: 22px;">{{ merchant.name }}</h1>
+            <p style="margin: 5px 0 0; opacity: 0.8; font-size: 14px;">Verified Partner Program</p>
+        </div>
+
+        <div class="profile-body" style="padding: 30px 20px;">
+            <div class="info-group" style="margin-bottom: 20px;">
+                <label>Business Name</label>
+                <div>{{ merchant.name }}</div>
+            </div>
+
+            <div class="info-group" style="margin-bottom: 20px;">
+                <label>Merchant ID</label>
+                <div class="mono-id">MID-{{ merchant.admin_id }}-{{ merchant.name[:3].upper() if merchant.name else
+                    'XXX' }}</div>
+            </div>
+
+            <div class="info-group" style="margin-bottom: 20px;">
+                <label>Registered Email</label>
+                <div>{{ merchant.email }}</div>
+            </div>
+
+            <div class="info-group" style="margin-bottom: 30px;">
+                <label>Account Status</label>
+                <div class="status-badge">ACTIVE</div>
+            </div>
+
+            <div class="profile-actions">
+                <a href="/merchant/dashboard" class="dashboard-link">Go to Dashboard</a>
+
+                <button type="button" class="btn-delete" onclick="showDeleteModal()">
+                    <i class="bi bi-trash3"></i> Close Seller Account
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal-overlay">
+    <div class="modal-content">
+        <h2>Close Business Account?</h2>
+        <p>Warning: This will permanently delete all your product listings and business history. This cannot be undone.
+        </p>
+
+        <div class="modal-buttons">
+            <button type="button" onclick="hideDeleteModal()" class="btn-cancel">Cancel</button>
+            <form action="/merchant/delete-account" method="POST">
+                <button type="submit" class="btn-confirm-delete">Close My Account</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+    function hideDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+    }
+</script>
+
+<style>
+    /* Profile Page Styles */
+    .profile-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition: 0.3s;
+    }
+
+    .info-group label {
+        display: block;
+        color: #878787;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+
+    .info-group div {
+        font-size: 16px;
+        color: #212121;
+        font-weight: 500;
+    }
+
+    .mono-id {
+        font-family: monospace;
+        font-size: 14px !important;
+    }
+
+    .status-badge {
+        display: inline-block;
+        background: #e8f5e9;
+        color: #2e7d32;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .profile-actions {
+        border-top: 1px solid #f0f0f0;
+        padding-top: 30px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .dashboard-link {
+        color: #2874f0;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .btn-delete {
+        background: #fff;
+        color: #ff4343;
+        border: 1px solid #ff4343;
+        padding: 10px 18px;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.3s;
+        font-size: 14px;
+    }
+
+    .btn-delete:hover {
+        background: #ff4343;
+        color: white;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 10000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 400px;
+        text-align: center;
+    }
+
+    .modal-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    .btn-cancel {
+        padding: 10px 20px;
+        border: 1px solid #ccc;
+        background: white;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .btn-confirm-delete {
+        padding: 10px 20px;
+        background: #ff4343;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    /* DARK MODE OVERRIDES */
+    body.dark .profile-card {
+        background: #2b2b2b;
+        box-shadow: 0 4px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    body.dark .info-group div {
+        color: #ffffff;
+    }
+
+    body.dark .info-group label {
+        color: #aaaaaa;
+    }
+
+    body.dark .profile-actions {
+        border-top-color: #444;
+    }
+
+    body.dark .btn-delete {
+        background: transparent;
+    }
+
+    body.dark .modal-content {
+        background: #333;
+        color: white;
+    }
+
+    body.dark .btn-cancel {
+        background: #444;
+        color: white;
+        border-color: #555;
+    }
+
+    body.dark .status-badge {
+        background: rgba(46, 125, 50, 0.2);
+        color: #81c784;
+    }
+
+    body.dark .profile-header {
+        background: #0d1117 !important;
+    }
+</style>
+{% endblock %}

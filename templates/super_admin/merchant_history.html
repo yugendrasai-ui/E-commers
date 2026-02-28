@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merchant History - Express-Kart</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #224abe;
+            --secondary-color: #858796;
+            --body-bg: #f8f9fc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--body-bg);
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            color: #3a3b45;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            margin-bottom: 2rem;
+            border-left: 0.25rem solid var(--primary-color);
+        }
+
+        .section {
+            margin-bottom: 2rem;
+        }
+
+        .section h2 {
+            font-size: 1.25rem;
+            color: #4e73df;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #e3e6f0;
+            padding-bottom: 0.5rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .product-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e3e6f0;
+        }
+
+        .product-card img {
+            width: 100%;
+            height: 100px;
+            object-fit: contain;
+            margin-bottom: 0.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        th {
+            text-align: left;
+            padding: 1rem;
+            background: #f8f9fc;
+            border-bottom: 2px solid #e3e6f0;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #e3e6f0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/super-admin/merchants"
+                style="text-decoration:none; color:var(--primary-color); font-weight:600;"><i
+                    class="fas fa-arrow-left"></i> Back to Merchants</a>
+            <h1 style="margin-top:1rem;">Activity Report: {{ merchant.name }}</h1>
+        </div>
+
+        <div class="info-card">
+            <p><strong>Email:</strong> {{ merchant.email }}</p>
+            <p><strong>Status:</strong> {{ merchant.status | upper }}</p>
+            <p><strong>Role:</strong> {{ merchant.role }}</p>
+        </div>
+
+        <div class="section">
+            <h2>Products Inventory</h2>
+            <div class="grid">
+                {% for product in products %}
+                <div class="product-card">
+                    <img src="/static/uploads/product_images/{{ product.image }}" alt="{{ product.name }}">
+                    <p style="font-weight:600; font-size:0.9rem;">{{ product.name }}</p>
+                    <p style="color:var(--primary-color); font-size:0.8rem;">₹{{ product.price }}</p>
+                </div>
+                {% else %}
+                <p>No products added yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Sales History (Product Deliveries)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Customer</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>{{ order.created_at | strftime }}</td>
+                        <td>{{ order.product_name }}</td>
+                        <td>{{ order.quantity }}</td>
+                        <td>{{ order.customer_name }}</td>
+                        <td>₹{{ order.price * order.quantity }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center;">No sales recorded yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+
+</html>

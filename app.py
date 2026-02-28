@@ -10,6 +10,7 @@ import razorpay
 import traceback
 from werkzeug.utils import secure_filename
 from utils.pdf_generator import generate_pdf
+from auth_utils import send_otp
 
 
 
@@ -74,9 +75,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 @app.route('/merchant-signup', methods=['GET', 'POST'])
 def merchant_signup():
 
-    # If already logged in, redirect to merchant list
-    if 'admin_id' in session:
-        return redirect('/merchant/item-list')
+    # If already logged in, redirect to merchant dashboard
+    if 'merchant_id' in session:
+        return redirect('/merchant/dashboard')
 
     # Show form
     if request.method == "GET":
@@ -108,17 +109,15 @@ def merchant_signup():
     session['otp'] = otp
 
     # 4️⃣ Send OTP Email
-    message = Message(
-        subject="Express-Kart Merchant OTP",
-        sender=config.MAIL_USERNAME,
-        recipients=[email]
-    )
-    message.body = f"Your OTP for Express-Kart Merchant Registration is: {otp}"
+    subject = "Express-Kart Merchant OTP"
+    body = "Your OTP for Express-Kart Merchant Registration is: {otp}"
 
-    mail.send(message)
-
-    flash("OTP sent to your email!", "success")
-    return redirect('/verify-otp')
+    if send_otp(mail, email, subject, body):
+        flash("OTP sent to your email!", "success")
+        return redirect('/verify-otp')
+    else:
+        flash("Failed to send OTP. Please check your email or try again.", "danger")
+        return redirect('/merchant-signup')
 
 
 
@@ -163,10 +162,10 @@ def verify_otp_post():
         redirect_url = '/user-login'
     else:
         cursor.execute(
-            "INSERT INTO admin (name, email, password) VALUES (?, ?, ?)",
-            (session['signup_name'], session['signup_email'], hashed_password)
+            "INSERT INTO admin (name, email, password, status, is_seen) VALUES (?, ?, ?, ?, ?)",
+            (session['signup_name'], session['signup_email'], hashed_password, 'pending', 0)
         )
-        msg = "Merchant Registered Successfully!"
+        msg = "Merchant Registered Successfully! Please wait for Super Admin approval."
         redirect_url = '/merchant-login'
         
     conn.commit()
@@ -183,15 +182,64 @@ def verify_otp_post():
     return redirect(redirect_url)
 
 
+
+# ---------------------------------------------------------
+# ROUTE: RESEND OTP
+# ---------------------------------------------------------
+@app.route('/resend-otp')
+def resend_otp():
+    email = session.get('signup_email')
+    role = session.get('signup_role')
+
+    if not email:
+        flash("Session expired. Please register again.", "danger")
+        if role == 'user':
+            return redirect('/user-register')
+        return redirect('/merchant-signup')
+
+    otp = random.randint(100000, 999999)
+    session['otp'] = otp
+
+    subject = "Express-Kart Registration OTP (Resend)"
+    body = "Your NEW OTP for Express-Kart Registration is: {otp}"
+
+    if send_otp(mail, email, subject, body):
+        flash("A new OTP has been sent to your email.", "success")
+    else:
+        flash("Failed to resend OTP. Please check your email or try again.", "danger")
+
+    return redirect('/verify-otp')
+
+
+
+# =================================================================
+# ACCESS CONTROL HELPER
+# Centralised check: allow merchant (merchant_id) OR super admin (super_id)
+# =================================================================
+def merchant_or_admin_required():
+    """
+    Returns None if the caller is allowed to proceed.
+    Returns a redirect Response if they are not authenticated.
+    Rule: super_id  → always allowed (super admin can access all merchant routes)
+          merchant_id → allowed (regular seller)
+          neither    → redirect to merchant login
+    """
+    if 'super_id' in session or 'merchant_id' in session:
+        return None  # Access granted
+    flash("Please login to continue!", "danger")
+    return redirect('/merchant-login')
+
+
 # =================================================================
 # ROUTE 4: MERCHANT LOGIN PAGE (GET + POST)
 # =================================================================
 @app.route('/merchant-login', methods=['GET', 'POST'])
 def merchant_login():
 
-    # If already logged in, redirect to merchant list
-    if 'admin_id' in session:
-        return redirect('/merchant/item-list')
+    # If already logged in as merchant, redirect
+    if 'merchant_id' in session:
+        return redirect('/merchant/dashboard')
+    # If already logged in as super admin - super admin is NOT a merchant, don't redirect here
 
     # Show login page
     if request.method == 'GET':
@@ -201,14 +249,8 @@ def merchant_login():
     email = request.form['email']
     password = request.form['password']
 
-    # Step 0: Check for hardcoded Super Admin credentials
-    if email == 'admin@123' and password == 'admin123':
-        session['admin_id'] = 0  # Special ID for Super Admin
-        session['admin_name'] = 'Platform Super Admin'
-        session['admin_email'] = 'admin@123'
-        session['admin_role'] = 'super_admin'
-        flash("Logged in as SUPER ADMIN", "success")
-        return redirect('/merchant/item-list')
+    # Step 0: Super Admin credentials are handled on a SEPARATE SECURE route.
+    # Do NOT allow super admin login from this route for security.
 
     # Step 1: Check if merchant email exists in DB for regular sellers
     conn = get_db_connection()
@@ -234,27 +276,228 @@ def merchant_login():
         flash("Incorrect password! Try again.", "danger")
         return redirect('/merchant-login')
 
-    # Step 5: If login success → Create merchant session
-    session['admin_id'] = admin['admin_id']
-    session['admin_name'] = admin['name']
-    session['admin_email'] = admin['email']
-    # Explicitly set to 'seller' for database logins (reserve 'super_admin' for hardcoded login)
-    session['admin_role'] = 'seller'
+    if admin['status'] == 'blocked':
+        flash("Your account has been blocked by the Super Admin.", "danger")
+        return redirect('/merchant-login')
+
+    if admin['status'] == 'pending':
+        flash("Your account is currently pending approval from the Super Admin. Please check back later.", "warning")
+        return redirect('/merchant-login')
+
+    # Step 5: If login success → Create merchant session (do NOT affect super_id)
+    session['merchant_id'] = admin['admin_id']
+    session['merchant_name'] = admin['name']
+    session['merchant_email'] = admin['email']
+    session['merchant_role'] = 'seller'
+    # NOTE: We do NOT clear super_id here to allow separate tab sessions
 
     flash("Login Successful!", "success")
-    return redirect('/merchant/item-list')
+    return redirect('/merchant/dashboard')
+
+# =================================================================
+# SECURE SUPER ADMIN LOGIN (HIDDEN ROUTE - NOT LINKED ANYWHERE)
+# Only the website owner should know this URL.
+# =================================================================
+
+# Simple in-memory brute-force tracker {ip: [fail_count, lockout_until]}
+_admin_failed_attempts = {}
+
+@app.route('/admin-secure-access-xk9', methods=['GET', 'POST'])
+def super_admin_login():
+    import time
+
+    # If already logged in as super admin, go to dashboard
+    if 'super_id' in session:
+        return redirect('/super-admin/dashboard')
+
+    ip = request.remote_addr
+    now = time.time()
+
+    # --- Brute-force protection ---
+    record = _admin_failed_attempts.get(ip, [0, 0])
+    fail_count, locked_until = record
+
+    if locked_until > now:
+        remaining = int((locked_until - now) / 60) + 1
+        return f"""
+        <html><body style="font-family:sans-serif;text-align:center;padding:60px;background:#111;color:#fff;">
+        <h2>Access Temporarily Blocked</h2>
+        <p>Too many failed attempts. Try again in <strong>{remaining} minute(s)</strong>.</p>
+        </body></html>
+        """, 429
+
+    if request.method == 'GET':
+        return render_template('super_admin/login.html')
+
+    # POST - validate credentials
+    email = request.form.get('email', '')
+    password = request.form.get('password', '')
+
+    if email == config.SUPER_ADMIN_EMAIL and password == config.SUPER_ADMIN_PASSWORD:
+        # SUCCESS - reset fail counter and set super session ONLY
+        _admin_failed_attempts[ip] = [0, 0]
+        session['super_id']    = 0
+        session['super_name']  = 'Platform Super Admin'
+        session['super_email'] = 'admin@123'
+        session['super_role']  = 'super_admin'
+        # NOTE: We do NOT touch merchant_id - sessions are fully independent
+        flash("Welcome, Super Admin!", "success")
+        return redirect('/super-admin/dashboard')
+    else:
+        # FAIL - increment counter
+        fail_count += 1
+        lockout = now + 15 * 60 if fail_count >= 5 else 0  # 15-min lockout after 5 fails
+        _admin_failed_attempts[ip] = [fail_count, lockout]
+        remaining_attempts = max(0, 5 - fail_count)
+        flash(f"Invalid credentials. {remaining_attempts} attempt(s) remaining before lockout.", "danger")
+        return redirect('/admin-secure-access-xk9')
+
 
 # =================================================================
 # ROUTE 5: MERCHANT DASHBOARD (PROTECTED ROUTE)
 # =================================================================
-@app.route('/merchant-dashboard')
+@app.route('/merchant/dashboard')
 def merchant_dashboard():
     # Only logged-in merchant can access
-    if 'admin_id' not in session:
-        flash("Please login to access dashboard!", "danger")
-        return redirect('/merchant-login')
+    auth_check = merchant_or_admin_required()
+    if auth_check: return auth_check
+
+    # Super admin gets their own dashboard; redirect them there
+    if 'merchant_id' not in session and 'super_id' in session:
+        return redirect('/super-admin/dashboard')
+
+    admin_id = session['merchant_id']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # 1. Total Products
+    cursor.execute("SELECT COUNT(*) FROM products WHERE admin_id = ?", (admin_id,))
+    total_products = cursor.fetchone()[0]
+
+    # 2. Total Orders & Revenue
+    cursor.execute("""
+        SELECT COUNT(DISTINCT oi.order_id), SUM(oi.price * oi.quantity)
+        FROM order_items oi
+        JOIN products p ON oi.product_id = p.product_id
+        WHERE p.admin_id = ?
+    """, (admin_id,))
+    row = cursor.fetchone()
+    total_orders = row[0] or 0
+    total_revenue = row[1] or 0
     
-    return redirect('/merchant/item-list')
+    # 3. Profit Gain (Assuming 20% margin as per cart logic)
+    total_profit = round(total_revenue * 0.2, 2)
+
+    # 4. Products in Stock
+    cursor.execute("SELECT SUM(stock) FROM products WHERE admin_id = ?", (admin_id,))
+    total_stock = cursor.fetchone()[0] or 0
+
+    # 5. Recent Orders
+    cursor.execute("""
+        SELECT o.*, u.name as customer_name
+        FROM orders o
+        JOIN order_items oi ON o.order_id = oi.order_id
+        JOIN products p ON oi.product_id = p.product_id
+        JOIN users u ON o.user_id = u.user_id
+        WHERE p.admin_id = ?
+        GROUP BY o.order_id
+        ORDER BY o.created_at DESC LIMIT 5
+    """, (admin_id,))
+    recent_orders = cursor.fetchall()
+
+    # Data for Charts
+    # Bar Chart: Sales per Category
+    cursor.execute("""
+        SELECT p.category, SUM(oi.quantity) as total_sold
+        FROM order_items oi
+        JOIN products p ON oi.product_id = p.product_id
+        WHERE p.admin_id = ?
+        GROUP BY p.category
+    """, (admin_id,))
+    sales_data = cursor.fetchall()
+    categories = [row['category'] for row in sales_data]
+    sold_counts = [row['total_sold'] for row in sales_data]
+
+    # Pie Chart: Revenue per Category
+    cursor.execute("""
+        SELECT p.category, SUM(oi.price * oi.quantity) as revenue
+        FROM order_items oi
+        JOIN products p ON oi.product_id = p.product_id
+        WHERE p.admin_id = ?
+        GROUP BY p.category
+    """, (admin_id,))
+    revenue_data = cursor.fetchall()
+    revenue_labels = [row['category'] for row in revenue_data]
+    revenue_values = [row['revenue'] for row in revenue_data]
+
+    # 6. Notifications (Unseen Order Items)
+    cursor.execute("""
+        SELECT oi.*, p.name as product_name, o.created_at, u.name as customer_name
+        FROM order_items oi
+        JOIN products p ON oi.product_id = p.product_id
+        JOIN orders o ON oi.order_id = o.order_id
+        JOIN users u ON o.user_id = u.user_id
+        WHERE p.admin_id = ? AND oi.is_seen = 0
+        ORDER BY o.created_at DESC
+    """, (admin_id,))
+    notifications = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template("merchant/dashboard.html", 
+                           total_products=total_products,
+                           total_orders=total_orders,
+                           total_revenue=total_revenue,
+                           total_profit=total_profit,
+                           total_stock=total_stock,
+                           recent_orders=recent_orders,
+                           categories=categories,
+                           sold_counts=sold_counts,
+                           revenue_labels=revenue_labels,
+                           revenue_values=revenue_values,
+                           notifications=notifications)
+
+@app.route('/merchant/mark-seen/<int:item_id>')
+def mark_order_item_seen(item_id):
+    auth_check = merchant_or_admin_required()
+    if auth_check: return auth_check
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE order_items SET is_seen = 1 WHERE item_id = ?", (item_id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return redirect('/merchant/dashboard')
+
+
+@app.route('/merchant/orders')
+def merchant_orders():
+    auth_check = merchant_or_admin_required()
+    if auth_check: return auth_check
+
+    admin_id = session['merchant_id']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Fetch all orders related to this merchant's products
+    cursor.execute("""
+        SELECT o.*, u.name as customer_name
+        FROM orders o
+        JOIN order_items oi ON o.order_id = oi.order_id
+        JOIN products p ON oi.product_id = p.product_id
+        JOIN users u ON o.user_id = u.user_id
+        WHERE p.admin_id = ?
+        GROUP BY o.order_id
+        ORDER BY o.created_at DESC
+    """, (admin_id,))
+    orders = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template("merchant/orders.html", orders=orders)
 
 
 # =================================================================
@@ -262,13 +505,51 @@ def merchant_dashboard():
 # =================================================================
 @app.route('/merchant-logout')
 def admin_logout():
-
-    # Clear admin session
-    session.pop('admin_id', None)
-    session.pop('admin_name', None)
-    session.pop('admin_email', None)
+    # Clear merchant session
+    session.pop('merchant_id', None)
+    session.pop('merchant_name', None)
+    session.pop('merchant_email', None)
+    session.pop('merchant_role', None)
 
     flash("Logged out successfully.", "success")
+    return redirect('/merchant-login')
+
+# =================================================================
+# MERCHANT PROFILE & DELETE ACCOUNT
+# =================================================================
+@app.route('/merchant/profile')
+def merchant_profile():
+    auth_check = merchant_or_admin_required()
+    if auth_check: return auth_check
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM admin WHERE admin_id = ?", (session['merchant_id'],))
+    merchant = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    
+    return render_template("merchant/profile.html", merchant=merchant)
+
+@app.route('/merchant/delete-account', methods=['POST'])
+def merchant_delete_account():
+    auth_check = merchant_or_admin_required()
+    if auth_check: return auth_check
+    
+    merchant_id = session['merchant_id']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Delete products and the merchant account
+    cursor.execute("DELETE FROM products WHERE admin_id = ?", (merchant_id,))
+    cursor.execute("DELETE FROM admin WHERE admin_id = ?", (merchant_id,))
+    
+    conn.commit()
+    cursor.close()
+    conn.close()
+    
+    session.clear()
+    flash("Your merchant account has been deleted successfully.", "success")
     return redirect('/merchant-login')
 
 
@@ -280,9 +561,10 @@ def admin_logout():
 def add_item_page():
 
     # Only logged-in admin can access
-    if 'admin_id' not in session:
-        flash("Please login first!", "danger")
-        return redirect('/merchant-login')
+    auth_check = merchant_or_admin_required()
+    if auth_check: return auth_check
+
+    admin_id = session['merchant_id']
 
     return render_template("merchant/add_item.html")
 
@@ -295,15 +577,15 @@ def add_item_page():
 def add_item():
 
     # Check admin session
-    if 'admin_id' not in session:
-        flash("Please login first!", "danger")
-        return redirect('/merchant-login')
+    auth_check = merchant_or_admin_required()
+    if auth_check: return auth_check
 
     # 1️⃣ Get form data
     name = request.form['name']
     description = request.form['description']
     category = request.form['category']
     price = request.form['price']
+    stock = request.form.get('stock', 10) # Get stock from form, default to 10
     image_file = request.files['image']
 
     # 2️⃣ Validate image upload
@@ -325,8 +607,8 @@ def add_item():
     cursor = conn.cursor()
 
     cursor.execute(
-        "INSERT INTO products (name, description, category, price, image, admin_id) VALUES (?, ?, ?, ?, ?, ?)",
-        (name, description, category, price, filename, session['admin_id'])
+        "INSERT INTO products (name, description, category, price, image, admin_id, stock) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (name, description, category, price, filename, session['merchant_id'], stock)
     )
 
     conn.commit()
@@ -343,9 +625,8 @@ def add_item():
 @app.route('/merchant/item-list')
 def item_list():
 
-    if 'admin_id' not in session:
-        flash("Please login!", "danger")
-        return redirect('/merchant-login')
+    auth_check = merchant_or_admin_required()
+    if auth_check: return auth_check
 
     search = request.args.get('search', '')
     category_filter = request.args.get('category', '')
@@ -362,9 +643,17 @@ def item_list():
     query = "SELECT * FROM products WHERE 1=1"
     params = []
 
-    if session.get('admin_role') != 'super_admin':
+    # ─── PRODUCT FILTER LOGIC ───────────────────────────────────────────
+    # RULE: merchant_id ALWAYS takes priority.
+    #   • If merchant_id in session  → ONLY show that merchant's products
+    #   • Else if super_id in session → show ALL products (super admin view)
+    #   • Otherwise                  → redirect to login (shouldn't reach here)
+    # This prevents stale super_id cookies from leaking all products to merchants.
+    if 'merchant_id' in session:
+        # Merchant mode: strictly filter to their own products only
         query += " AND admin_id = ?"
-        params.append(session['admin_id'])
+        params.append(session['merchant_id'])
+    # else: super admin only (super_id present, no merchant_id) → no extra filter → all products
 
     if search:
         query += " AND name LIKE ?"
@@ -393,9 +682,8 @@ def item_list():
 @app.route('/merchant/delete-item/<int:item_id>')
 def delete_item(item_id):
 
-    if 'admin_id' not in session:
-        flash("Please login first!", "danger")
-        return redirect('/merchant-login')
+    auth_check = merchant_or_admin_required()
+    if auth_check: return auth_check
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -409,7 +697,7 @@ def delete_item(item_id):
         return redirect('/merchant/item-list')
 
     # Ownership check
-    if session.get('admin_role') != 'super_admin' and product['admin_id'] != session['admin_id']:
+    if 'merchant_id' in session and product['admin_id'] != session['merchant_id']:
         flash("You do not have permission to delete this product!", "danger")
         return redirect('/merchant/item-list')
 
@@ -438,9 +726,8 @@ def delete_item(item_id):
 def view_item(item_id):
 
     # Check admin session
-    if 'admin_id' not in session:
-        flash("Please login first!", "danger")
-        return redirect('/merchant-login')
+    auth_check = merchant_or_admin_required()
+    if auth_check: return auth_check
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -456,7 +743,7 @@ def view_item(item_id):
         return redirect('/merchant/item-list')
 
     # Ownership check
-    if session.get('admin_role') != 'super_admin' and product['admin_id'] != session['admin_id']:
+    if 'merchant_id' in session and product['admin_id'] != session['merchant_id']:
         flash("You do not have permission to view this product!", "danger")
         return redirect('/merchant/item-list')
 
@@ -468,10 +755,11 @@ def view_item(item_id):
 @app.route('/merchant/update-item/<int:item_id>', methods=['GET'])
 def update_item_page(item_id):
 
-    # Check login
-    if 'admin_id' not in session:
-        flash("Please login!", "danger")
-        return redirect('/merchant-login')
+    # Security
+    auth_check = merchant_or_admin_required()
+    if auth_check: return auth_check
+
+    admin_id = session['merchant_id']
 
     # Fetch product data
     conn = get_db_connection()
@@ -488,7 +776,7 @@ def update_item_page(item_id):
         return redirect('/merchant/item-list')
 
     # Ownership check
-    if session.get('admin_role') != 'super_admin' and product['admin_id'] != session['admin_id']:
+    if 'merchant_id' in session and product['admin_id'] != session['merchant_id']:
         flash("You do not have permission to update this product!", "danger")
         return redirect('/merchant/item-list')
 
@@ -501,15 +789,15 @@ def update_item_page(item_id):
 @app.route('/merchant/update-item/<int:item_id>', methods=['POST'])
 def update_item(item_id):
 
-    if 'admin_id' not in session:
-        flash("Please login!", "danger")
-        return redirect('/merchant-login')
+    auth_check = merchant_or_admin_required()
+    if auth_check: return auth_check
 
     # 1️⃣ Get updated form data
     name = request.form['name']
     description = request.form['description']
     category = request.form['category']
     price = request.form['price']
+    stock = request.form.get('stock', 10)
 
     new_image = request.files['image']
 
@@ -524,7 +812,7 @@ def update_item(item_id):
         return redirect('/merchant/item-list')
 
     # Ownership check
-    if session.get('admin_role') != 'super_admin' and product['admin_id'] != session['admin_id']:
+    if 'merchant_id' in session and product['admin_id'] != session['merchant_id']:
         flash("You do not have permission to update this product!", "danger")
         return redirect('/merchant/item-list')
 
@@ -555,9 +843,9 @@ def update_item(item_id):
     # 4️⃣ Update product in the database
     cursor.execute("""
         UPDATE products
-        SET name=?, description=?, category=?, price=?, image=?
+        SET name=?, description=?, category=?, price=?, image=?, stock=?
         WHERE product_id=?
-    """, (name, description, category, price, final_image_name, item_id))
+    """, (name, description, category, price, final_image_name, stock, item_id))
 
     conn.commit()
     cursor.close()
@@ -603,17 +891,16 @@ def user_register():
     otp = random.randint(100000, 999999)
     session['otp'] = otp
 
-    # Send OTP Email
-    message = Message(
-        subject="Express-Kart Registration OTP",
-        sender=config.MAIL_USERNAME,
-        recipients=[email]
-    )
-    message.body = f"Your OTP for Express-Kart Account Registration is: {otp}"
-    mail.send(message)
+    # 4️⃣ Send OTP Email
+    subject = "Express-Kart Registration OTP"
+    body = "Your OTP for Express-Kart Account Registration is: {otp}"
 
-    flash("OTP sent to your email!", "success")
-    return redirect('/verify-otp')
+    if send_otp(mail, email, subject, body):
+        flash("OTP sent to your email!", "success")
+        return redirect('/verify-otp')
+    else:
+        flash("Failed to send OTP. Please check your email or try again.", "danger")
+        return redirect('/user-register')
 
 # =================================================================
 # ROUTE: USER LOGIN
@@ -653,6 +940,10 @@ def user_login():
         flash("Incorrect password!", "danger")
         return redirect('/user-login')
 
+    if user['status'] == 'blocked':
+        flash("Your account has been blocked by the Admin.", "danger")
+        return redirect('/user-login')
+
     # Create user session
     session['user_id'] = user['user_id']
     session['user_name'] = user['name']
@@ -667,12 +958,45 @@ def user_login():
 # =================================================================
 @app.route('/user-dashboard')
 def user_dashboard():
-
     if 'user_id' not in session:
         flash("Please login first!", "danger")
         return redirect('/user-login')
 
-    return render_template("user/user_dashboard.html", user_name=session['user_name'])
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Get total orders
+    cursor.execute("SELECT COUNT(*) FROM orders WHERE user_id=?", (session['user_id'],))
+    order_count = cursor.fetchone()[0]
+
+    # Get total spent
+    cursor.execute("SELECT SUM(amount) FROM orders WHERE user_id=?", (session['user_id'],))
+    total_spent = cursor.fetchone()[0] or 0
+
+    # Get recent orders with product info
+    cursor.execute("""
+        SELECT o.*, 
+            (SELECT p.name FROM order_items oi 
+             JOIN products p ON oi.product_id = p.product_id 
+             WHERE oi.order_id = o.order_id LIMIT 1) as product_name,
+            (SELECT p.image FROM order_items oi 
+             JOIN products p ON oi.product_id = p.product_id 
+             WHERE oi.order_id = o.order_id LIMIT 1) as product_image
+        FROM orders o
+        WHERE o.user_id = ?
+        ORDER BY o.created_at DESC
+        LIMIT 3
+    """, (session['user_id'],))
+    recent_orders = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template("user/user_dashboard.html", 
+                           user_name=session['user_name'],
+                           order_count=order_count,
+                           total_spent=total_spent,
+                           recent_orders=recent_orders)
 
 
 # =================================================================
@@ -1051,21 +1375,30 @@ def verify_payment():
     cursor = conn.cursor()
 
     try:
+        # Get delivery address from session
+        addr_dict = session.get('delivery_address', {})
+        address_str = f"{addr_dict.get('name')}\n{addr_dict.get('phone')}\n{addr_dict.get('address')}, {addr_dict.get('city')} - {addr_dict.get('pincode')}"
+
         # Insert into orders table
         cursor.execute("""
-            INSERT INTO orders (user_id, razorpay_order_id, razorpay_payment_id, amount, payment_status)
-            VALUES (?, ?, ?, ?, ?)
-        """, (user_id, razorpay_order_id, razorpay_payment_id, total_amount, 'paid'))
+            INSERT INTO orders (user_id, razorpay_order_id, razorpay_payment_id, amount, payment_status, address)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (user_id, razorpay_order_id, razorpay_payment_id, total_amount, 'paid', address_str))
 
         order_db_id = cursor.lastrowid  # newly created order's primary key
 
-        # Insert all items
+        # Insert all items and reduce stock
         for pid_str, item in cart.items():
             product_id = int(pid_str)
+            
+            # 1. Insert into order_items
             cursor.execute("""
                 INSERT INTO order_items (order_id, product_id, product_name, quantity, price)
                 VALUES (?, ?, ?, ?, ?)
             """, (order_db_id, product_id, item['name'], item['quantity'], item['price']))
+
+            # 2. Reduce Stock
+            cursor.execute("UPDATE products SET stock = stock - ? WHERE product_id = ?", (item['quantity'], product_id))
 
         # Commit transaction
         conn.commit()
@@ -1150,11 +1483,51 @@ def my_orders():
         ORDER BY o.created_at DESC
     """, (session['user_id'],))
     orders = cursor.fetchall()
-
     cursor.close()
     conn.close()
 
     return render_template("user/my_orders.html", orders=orders)
+
+# =================================================================
+# USER PROFILE & DELETE ACCOUNT
+# =================================================================
+@app.route('/user/profile')
+def user_profile():
+    if 'user_id' not in session:
+        flash("Please login!", "danger")
+        return redirect('/user-login')
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE user_id = ?", (session['user_id'],))
+    user = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    return render_template("user/profile.html", user=user)
+
+@app.route('/user/delete-account', methods=['POST'])
+def user_delete_account():
+    if 'user_id' not in session:
+        flash("Please login!", "danger")
+        return redirect('/user-login')
+
+    user_id = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Delete user's orders and items (simplified, ideally keep records but anonymize)
+    cursor.execute("DELETE FROM order_items WHERE order_id IN (SELECT order_id FROM orders WHERE user_id = ?)", (user_id,))
+    cursor.execute("DELETE FROM orders WHERE user_id = ?", (user_id,))
+    cursor.execute("DELETE FROM users WHERE user_id = ?", (user_id,))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    session.clear()
+    flash("Your account has been deleted successfully.", "success")
+    return redirect('/')
 
 # =================================================================
 # ADDRESS PAGE
@@ -1168,7 +1541,7 @@ def user_address():
 
     if request.method == 'GET':
         cart = session.get('cart', {})
-        
+
         # Calculate totals with 20% Markup (MRP = Selling Price / 0.8)
         total_mrp = 0
         total_discount = 0
@@ -1177,15 +1550,15 @@ def user_address():
         for item in cart.values():
             mrp = round(item['price'] / 0.8) if item['price'] > 0 else 0
             discount = mrp - item['price']
-            
+
             total_mrp += mrp * item['quantity']
             total_discount += discount * item['quantity']
             grand_total += item['price'] * item['quantity']
 
-        return render_template("user/address.html", 
-                               cart=cart, 
-                               total_mrp=total_mrp, 
-                               total_discount=total_discount, 
+        return render_template("user/address.html",
+                               cart=cart,
+                               total_mrp=total_mrp,
+                               total_discount=total_discount,
                                grand_total=grand_total)
 
     # POST → Save address in session
@@ -1245,5 +1618,384 @@ def download_invoice(order_id):
     return response
 
 
+
+@app.route("/super-admin/generate-invoice/<int:order_id>")
+def super_admin_generate_invoice(order_id):
+    # Rule: super_id OR merchant_id required
+    auth_check = merchant_or_admin_required()
+    if auth_check: return auth_check
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # If it's a merchant, check if the order contains their products
+    if 'merchant_id' in session:
+        admin_id = session['merchant_id']
+        cursor.execute("""
+            SELECT o.* FROM orders o
+            JOIN order_items oi ON o.order_id = oi.order_id
+            JOIN products p ON oi.product_id = p.product_id
+            WHERE o.order_id = ? AND p.admin_id = ?
+            LIMIT 1
+        """, (order_id, admin_id))
+    else:
+        # Super Admin can see any order
+        cursor.execute("SELECT * FROM orders WHERE order_id = ?", (order_id,))
+    
+    order = cursor.fetchone()
+    if not order:
+        cursor.close()
+        conn.close()
+        flash("Order not found or access denied.", "danger")
+        return redirect(request.referrer or '/merchant/orders')
+
+    # Fetch items
+    cursor.execute("SELECT * FROM order_items WHERE order_id = ?", (order_id,))
+    items = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    # Render using the same template as user
+    html = render_template("user/invoice.html", order=order, items=items)
+
+    pdf = generate_pdf(html)
+    if not pdf:
+        flash("Error generating PDF", "danger")
+        return redirect(request.referrer or '/merchant/orders')
+
+    response = make_response(pdf.getvalue())
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f"inline; filename=invoice_{order_id}.pdf"
+
+    return response
+
+
+# =================================================================
+# SUPER ADMIN ROUTES
+# =================================================================
+
+def super_admin_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'super_id' not in session:
+            return redirect('/admin-secure-access-xk9')
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route('/super-admin/logout')
+def super_admin_logout():
+    """Dedicated logout for Super Admin - clears all super_* session keys."""
+    session.pop('super_id', None)
+    session.pop('super_name', None)
+    session.pop('super_email', None)
+    session.pop('super_role', None)
+    flash("Logged out successfully.", "success")
+    return redirect('/admin-secure-access-xk9')
+
+
+# -----------------------------------------------------------------
+# SUPER ADMIN: ALL PRODUCTS (view products from ALL merchants)
+# -----------------------------------------------------------------
+@app.route('/super-admin/products')
+@super_admin_required
+def super_admin_products():
+    search = request.args.get('search', '')
+    category_filter = request.args.get('category', '')
+    merchant_filter = request.args.get('merchant_id', '')
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Category list for filter dropdown
+    cursor.execute("SELECT DISTINCT category FROM products ORDER BY category")
+    categories = cursor.fetchall()
+
+    # Merchant list for filter dropdown
+    cursor.execute("SELECT admin_id, name FROM admin WHERE role='seller' ORDER BY name")
+    merchants = cursor.fetchall()
+
+    # Build query - super admin sees EVERYTHING
+    query = """
+        SELECT p.*, a.name as merchant_name
+        FROM products p
+        LEFT JOIN admin a ON p.admin_id = a.admin_id
+        WHERE 1=1
+    """
+    params = []
+
+    if search:
+        query += " AND p.name LIKE ?"
+        params.append("%" + search + "%")
+    if category_filter:
+        query += " AND p.category = ?"
+        params.append(category_filter)
+    if merchant_filter:
+        query += " AND p.admin_id = ?"
+        params.append(merchant_filter)
+
+    query += " ORDER BY p.product_id DESC"
+    cursor.execute(query, params)
+    products = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        'super_admin/products.html',
+        products=products,
+        categories=categories,
+        merchants=merchants,
+        total=len(products)
+    )
+
+
+# -----------------------------------------------------------------
+# SUPER ADMIN: DELETE ANY PRODUCT
+# -----------------------------------------------------------------
+@app.route('/super-admin/delete-product/<int:product_id>')
+@super_admin_required
+def super_admin_delete_product(product_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT image FROM products WHERE product_id=?", (product_id,))
+    product = cursor.fetchone()
+
+    if not product:
+        flash("Product not found!", "danger")
+        return redirect('/super-admin/products')
+
+    # Delete image file
+    image_path = os.path.join(app.config['UPLOAD_FOLDER'], product['image'])
+    if os.path.exists(image_path):
+        os.remove(image_path)
+
+    cursor.execute("DELETE FROM products WHERE product_id=?", (product_id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    flash("Product deleted successfully!", "success")
+    return redirect('/super-admin/products')
+
+
+@app.route('/super-admin/dashboard')
+@super_admin_required
+def super_admin_dashboard():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Stats
+    cursor.execute("SELECT COUNT(*) FROM users")
+    total_users = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM admin WHERE role='seller'")
+    total_merchants = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM products")
+    total_products = cursor.fetchone()[0]
+
+    cursor.execute("SELECT SUM(amount) FROM orders WHERE payment_status='paid'")
+    total_revenue = cursor.fetchone()[0] or 0
+
+    # Recent Activities (Orders)
+    cursor.execute("""
+        SELECT o.*, u.name as customer_name
+        FROM orders o
+        JOIN users u ON o.user_id = u.user_id
+        ORDER BY o.created_at DESC LIMIT 10
+    """)
+    recent_orders = cursor.fetchall()
+
+    # New Merchant Notifications
+    cursor.execute("SELECT * FROM admin WHERE role='seller' AND is_seen=0 ORDER BY admin_id DESC")
+    new_merchants = cursor.fetchall()
+
+    # Category Distribution for Charts
+    cursor.execute("SELECT category, COUNT(*) as count FROM products GROUP BY category")
+    category_data = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template("super_admin/dashboard.html",
+                           total_users=total_users,
+                           total_merchants=total_merchants,
+                           total_products=total_products,
+                           total_revenue=total_revenue,
+                           recent_orders=recent_orders,
+                           new_merchants=new_merchants,
+                           category_data=category_data)
+
+@app.route('/super-admin/api/notifications')
+@super_admin_required
+def super_admin_notifications_api():
+    conn = get_db_connection()
+    cursor = conn.row_factory = sqlite3.Row  # Ensure row factory for JSON serialization
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT admin_id, name, email FROM admin WHERE role='seller' AND is_seen=0 ORDER BY admin_id DESC")
+    new_merchants = cursor.fetchall()
+    
+    # Convert to list of dicts for JSON
+    merchants_list = [dict(row) for row in new_merchants]
+    
+    cursor.close()
+    conn.close()
+    
+    return {
+        "unseen_count": len(merchants_list),
+        "merchants": merchants_list
+    }
+
+@app.route('/super-admin/mark-seen/<int:id>')
+@super_admin_required
+def super_admin_mark_seen(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE admin SET is_seen=1 WHERE admin_id=?", (id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return redirect('/super-admin/dashboard')
+
+@app.route('/super-admin/merchants')
+@super_admin_required
+def manage_merchants():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM admin WHERE role='seller'")
+    merchants = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template("super_admin/manage_merchants.html", merchants=merchants)
+
+@app.route('/super-admin/users')
+@super_admin_required
+def manage_users():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users")
+    users = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template("super_admin/manage_users.html", users=users)
+
+@app.route('/super-admin/block-merchant/<int:id>')
+@super_admin_required
+def block_merchant(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE admin SET status='blocked', is_seen=1 WHERE admin_id=?", (id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    flash("Merchant blocked successfully!", "warning")
+    return redirect('/super-admin/merchants')
+
+@app.route('/super-admin/unblock-merchant/<int:id>')
+@super_admin_required
+def unblock_merchant(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE admin SET status='active', is_seen=1 WHERE admin_id=?", (id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    flash("Merchant unblocked successfully!", "success")
+    return redirect('/super-admin/merchants')
+
+@app.route('/super-admin/approve-merchant/<int:id>')
+@super_admin_required
+def approve_merchant(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE admin SET status='active', is_seen=1 WHERE admin_id=?", (id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    flash("Merchant approved successfully!", "success")
+    return redirect('/super-admin/merchants')
+
+@app.route('/super-admin/reject-merchant/<int:id>')
+@super_admin_required
+def reject_merchant(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    # Delete the pending merchant account - this will naturally clear notification
+    cursor.execute("DELETE FROM admin WHERE admin_id=? AND role='seller'", (id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    flash("Merchant application rejected.", "danger")
+    return redirect('/super-admin/merchants')
+
+@app.route('/super-admin/block-user/<int:id>')
+@super_admin_required
+def block_user(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET status='blocked' WHERE user_id=?", (id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    flash("User blocked successfully!", "success")
+    return redirect('/super-admin/users')
+
+@app.route('/super-admin/unblock-user/<int:id>')
+@super_admin_required
+def unblock_user(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET status='active' WHERE user_id=?", (id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    flash("User unblocked successfully!", "success")
+    return redirect('/super-admin/users')
+
+@app.route('/super-admin/merchant-history/<int:id>')
+@super_admin_required
+def merchant_history(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    # Merchant Details
+    cursor.execute("SELECT * FROM admin WHERE admin_id=?", (id,))
+    merchant = cursor.fetchone()
+    # Products added by merchant
+    cursor.execute("SELECT * FROM products WHERE admin_id=?", (id,))
+    products = cursor.fetchall()
+    # Orders for merchant's products
+    cursor.execute("""
+        SELECT oi.*, o.created_at, u.name as customer_name, o.payment_status
+        FROM order_items oi
+        JOIN orders o ON oi.order_id = o.order_id
+        JOIN products p ON oi.product_id = p.product_id
+        JOIN users u ON o.user_id = u.user_id
+        WHERE p.admin_id = ?
+        ORDER BY o.created_at DESC
+    """, (id,))
+    orders = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template("super_admin/merchant_history.html", merchant=merchant, products=products, orders=orders)
+
+@app.route('/super-admin/user-history/<int:id>')
+@super_admin_required
+def user_history(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    # User Details
+    cursor.execute("SELECT * FROM users WHERE user_id=?", (id,))
+    user = cursor.fetchone()
+    # Orders placed by user
+    cursor.execute("SELECT * FROM orders WHERE user_id=? ORDER BY created_at DESC", (id,))
+    orders = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template("super_admin/user_history.html", user=user, orders=orders)
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5000)

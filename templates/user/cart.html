@@ -24,8 +24,10 @@
 
         {% for pid, item in cart.items() %}
         <div class="cart-item">
-            <div class="cart-item-img">
-                <img src="/static/uploads/product_images/{{ item.image }}" alt="{{ item.name }}">
+            <div class="cart-item-left">
+                <div class="cart-item-img">
+                    <img src="/static/uploads/product_images/{{ item.image }}" alt="{{ item.name }}">
+                </div>
 
                 <!-- Quantity Controls -->
                 <div class="quantity-ctrl">

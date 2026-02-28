@@ -1,0 +1,210 @@
+<footer class="main-footer">
+    <div class="footer-container">
+        <div class="footer-grid">
+            <div class="footer-section">
+                <h3>Express-Kart</h3>
+                <p>Your one-stop destination for everything you need. Quality products, fast delivery, and premium
+                    service.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/user-login">User Login</a></li>
+                    <li><a href="/merchant-login">Merchant Portal</a></li>
+                    <li><a href="#">About Us</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Customer Support</h4>
+                <ul>
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">Returns & Refunds</a></li>
+                    <li><a href="#">Shipping Info</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Newsletter</h4>
+                <p>Subscribe to get special offers and once-in-a-lifetime deals.</p>
+                <div class="subscribe-form">
+                    <input type="email" placeholder="Enter your email">
+                    <button>Join</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2026 Express-Kart. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of
+                    Service</a></p>
+        </div>
+    </div>
+</footer>
+
+<style>
+    .main-footer {
+        background: #172337;
+        color: #fff;
+        padding: 60px 0 20px;
+        margin-top: 50px;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .footer-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    .footer-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1.5fr;
+        gap: 40px;
+        margin-bottom: 40px;
+    }
+
+    .footer-section h3 {
+        font-size: 24px;
+        color: #2874f0;
+        margin-bottom: 20px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .footer-section h4 {
+        font-size: 18px;
+        margin-bottom: 20px;
+        position: relative;
+        padding-bottom: 10px;
+    }
+
+    .footer-section h4::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 30px;
+        height: 2px;
+        background: #2874f0;
+    }
+
+    .footer-section p {
+        color: #878787;
+        line-height: 1.6;
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+
+    .footer-section ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .footer-section ul li {
+        margin-bottom: 12px;
+    }
+
+    .footer-section ul li a {
+        color: #878787;
+        text-decoration: none;
+        font-size: 14px;
+        transition: 0.3s;
+    }
+
+    .footer-section ul li a:hover {
+        color: #fff;
+        padding-left: 5px;
+    }
+
+    .social-links {
+        display: flex;
+        gap: 15px;
+    }
+
+    .social-links a {
+        width: 35px;
+        height: 35px;
+        background: rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        color: #fff;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+
+    .social-links a:hover {
+        background: #2874f0;
+        transform: translateY(-3px);
+    }
+
+    .subscribe-form {
+        display: flex;
+        gap: 10px;
+    }
+
+    .subscribe-form input {
+        flex: 1;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+        outline: none;
+    }
+
+    .subscribe-form button {
+        padding: 10px 20px;
+        background: #2874f0;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .footer-bottom {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 20px;
+        text-align: center;
+        color: #878787;
+        font-size: 13px;
+    }
+
+    .footer-bottom a {
+        color: #878787;
+        text-decoration: none;
+    }
+
+    .footer-bottom a:hover {
+        color: #fff;
+    }
+
+    @media (max-width: 992px) {
+        .footer-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .footer-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .main-footer {
+            padding-bottom: 80px;
+            /* Space for mobile nav items if any */
+        }
+    }
+</style>

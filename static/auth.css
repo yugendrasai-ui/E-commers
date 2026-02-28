@@ -1,147 +1,5 @@
-/* ============================
-   AUTHENTICATION UI (Flipkart Style)
-============================ */
-
-.auth-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: calc(100vh - 200px);
-    padding: 60px 20px;
-}
-
-.auth-card {
-    background: #fff;
-    width: 100%;
-    max-width: 450px;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-}
-
-body.dark .auth-card {
-    background: #111;
-    box-shadow: 0 4px 20px rgba(255, 255, 255, 0.05);
-}
-
-.auth-header {
-    padding: 30px 40px;
-    text-align: center;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-body.dark .auth-header {
-    border-color: #333;
-}
-
-.auth-header h2 {
-    margin: 0;
-    font-size: 24px;
-    color: #2874f0;
-}
-
-.auth-header p {
-    margin: 8px 0 0;
-    color: #878787;
-    font-size: 14px;
-}
-
-.auth-body {
-    padding: 30px 40px;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    font-weight: 600;
-    font-size: 13px;
-    margin-bottom: 8px;
-    color: #878787;
-    text-transform: uppercase;
-}
-
-.label-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.link-small {
-    font-size: 12px;
-    color: #2874f0;
-    text-decoration: none;
-    font-weight: 600;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 12px 15px;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    font-size: 15px;
-    outline: none;
-    box-sizing: border-box;
-}
-
-body.dark .form-group input {
-    background: #222;
-    border-color: #333;
-    color: #fff;
-}
-
-.form-group input:focus {
-    border-color: #2874f0;
-}
-
-.btn-auth {
-    width: 100%;
-    background: #fb641b;
-    color: white;
-    border: none;
-    padding: 14px;
-    font-size: 16px;
-    font-weight: 600;
-    border-radius: 2px;
-    cursor: pointer;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, .2) !important;
-    margin-top: 10px;
-}
-
-.btn-auth:hover {
-    background: #f4511e;
-}
-
-.auth-footer {
-    padding: 0 40px 30px;
-    text-align: center;
-}
-
-.auth-footer p {
-    font-size: 14px;
-    color: #212121;
-}
-
-body.dark .auth-footer p {
-    color: #ccc;
-}
-
-.auth-footer a {
-    color: #2874f0;
-    text-decoration: none;
-    font-weight: 600;
-}
-
-.divider {
-    margin: 20px 0;
-    position: relative;
-    text-align: center;
-}
-
 .divider::before {
-    content: "";
+    content: '';
     position: absolute;
     top: 50%;
     left: 0;
@@ -185,4 +43,34 @@ body.dark .divider span {
     background: #efe;
     color: #0c0;
     border: 1px solid #cfc;
+}
+
+/* ============================
+   MOBILE RESPONSIVE
+============================ */
+@media (max-width: 576px) {
+    .auth-container {
+        min-height: calc(100vh - 125px);
+        /* 125px = Mobile Navbar (60px) + Bottom Nav (65px) */
+        padding: 16px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .auth-header {
+        padding: 18px 20px;
+    }
+
+    .auth-body {
+        padding: 18px 20px;
+    }
+
+    .auth-footer {
+        padding: 0 20px 18px;
+    }
+
+    .auth-card {
+        border-radius: 8px;
+    }
 }

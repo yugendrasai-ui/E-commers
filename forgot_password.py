@@ -60,6 +60,26 @@ def verify_reset_otp():
             
     return render_template('auth/verify_reset_otp.html')
 
+@forgot_pw.route('/resend-reset-otp')
+def resend_reset_otp():
+    email = session.get('reset_email')
+    account_type = session.get('reset_account_type')
+
+    if not email:
+        flash("Session expired. Please start over.", "danger")
+        return redirect(url_for('forgot_pw.forgot_password'))
+
+    from app import mail
+    subject = "Password Reset OTP (Resend) - Express-Kart"
+    body = "Your NEW OTP for password reset is: {otp}"
+
+    if send_otp(mail, email, subject, body):
+        flash("A new OTP has been sent to your email.", "success")
+    else:
+        flash("Failed to resend OTP. Please try again.", "danger")
+
+    return redirect(url_for('forgot_pw.verify_reset_otp'))
+
 @forgot_pw.route('/reset-password', methods=['GET', 'POST'])
 def reset_password():
     if request.method == 'POST':

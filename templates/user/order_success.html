@@ -19,6 +19,17 @@
         Order ID: #ORD-{{ order.order_id }}
     </div>
 
+    {% if order.address %}
+    <div style="border: 1px solid #f0f0f0; border-radius: 4px; margin-top: 20px; text-align: left; padding: 15px 25px;">
+        <div style="font-weight: 600; font-size: 14px; text-transform: uppercase; color: #878787; margin-bottom: 10px;">
+            <i class="bi bi-geo-alt"></i> Delivery Address
+        </div>
+        <div style="color: #212121; font-weight: 500; line-height: 1.6;">
+            {{ order.address }}
+        </div>
+    </div>
+    {% endif %}
+
     <div style="border: 1px solid #f0f0f0; border-radius: 4px; margin-top: 30px; text-align: left;">
         <div style="padding: 15px 25px; border-bottom: 1px solid #f0f0f0; background: #f9f9f9; font-weight: 600;">
             Order Details ({{ total_qty }} Items)
@@ -61,7 +72,11 @@
         </div>
     </div>
 
-    <div style="margin-top: 40px; display: flex; justify-content: center; gap: 20px;">
+    <div style="margin-top: 40px; display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
+        <a href="/user/download-invoice/{{ order.order_id }}" class="btn-delivery"
+            style="background: #ffffff; color: #2874f0; border: 1px solid #2874f0; text-decoration: none; padding: 15px 40px;">
+            <i class="bi bi-download"></i> DOWNLOAD INVOICE
+        </a>
         <a href="/user/products" class="btn-delivery"
             style="background: #2874f0; text-decoration: none; padding: 15px 40px;">
             CONTINUE SHOPPING

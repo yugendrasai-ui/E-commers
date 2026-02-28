@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Orders - Seller Central{% endblock %}
+
+{% block content %}
+<div class="orders-header">
+    <div class="oh-left">
+        <h1>Orders Management</h1>
+        <p>Review and track your product sales.</p>
+    </div>
+</div>
+
+<div class="orders-container">
+    <div class="table-card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer Name</th>
+                    <th>Payment Status</th>
+                    <th>Amount</th>
+                    <th>Order Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>#{{ order.order_id }}</td>
+                    <td>{{ order.customer_name }}</td>
+                    <td><span class="status-badge status-{{ order.payment_status }}">{{ order.payment_status }}</span>
+                    </td>
+                    <td>₹{{ "{:,.2f}".format(order.amount) }}</td>
+                    <td>{{ order.created_at | strftime }}</td>
+                    <td>
+                        <button class="btn-view-details"
+                            onclick="window.location.href='/super-admin/generate-invoice/{{ order.order_id }}'">
+                            <i class="bi bi-file-earmark-pdf"></i> Invoice
+                        </button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="empty-state">
+                        <i class="bi bi-bag-x"></i>
+                        <p>No orders found yet.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .orders-header {
+        padding: 30px 0;
+        border-bottom: 1px solid #e0e0e0;
+        margin-bottom: 30px;
+    }
+
+    body.dark .orders-header {
+        border-color: #333;
+    }
+
+    body.dark .profile-actions {
+        border-top-color: #444;
+    }
+
+    body.dark h1,
+    body.dark .profile-header h1 {
+        color: #fff !important;
+    }
+
+    body.dark p,
+    body.dark .profile-header p {
+        color: #ddd !important;
+    }
+
+    .oh-left h1 {
+        font-size: 24px;
+        margin-bottom: 5px;
+        color: #333;
+    }
+
+    body.dark .oh-left h1 {
+        color: #fff;
+    }
+
+    .oh-left p {
+        color: #878787;
+    }
+
+    .table-card {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        overflow-x: auto;
+    }
+
+    body.dark .table-card {
+        background: #1a1a1a;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        text-align: left;
+        padding: 15px 20px;
+        background: #f8f9fc;
+        color: #333;
+        font-weight: 600;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    body.dark h1,
+    body.dark .oh-left h1 {
+        color: #fff !important;
+    }
+
+    body.dark p,
+    body.dark .oh-left p {
+        color: #aaa !important;
+    }
+
+    body.dark th {
+        background: #252525;
+        color: #ccc;
+        border-color: #333;
+    }
+
+    td {
+        padding: 15px 20px;
+        border-bottom: 1px solid #f0f0f0;
+        color: #555;
+    }
+
+    body.dark td {
+        color: #bbb;
+        border-color: #333;
+    }
+
+    .status-badge {
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .status-paid,
+    .status-Success {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .status-pending {
+        background: #fff3ce;
+        color: #856404;
+    }
+
+    .btn-view-details {
+        background: #2874f0;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 0 !important;
+        color: #999;
+    }
+
+    .empty-state i {
+        font-size: 40px;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    @media (max-width: 768px) {
+        .orders-header {
+            padding: 20px 0;
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+        }
+
+        th:nth-child(5),
+        td:nth-child(5) {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}

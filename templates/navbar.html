@@ -21,7 +21,8 @@
             </option>
             {% endfor %}
         </select>
-        <input type="text" name="search" placeholder="Search products..." value="{{ request.args.get('search','') }}">
+        <input type="text" id="mainSearchInput" name="search" placeholder="Search products..."
+            value="{{ request.args.get('search','') }}">
         <button type="submit">
             <i class="bi bi-search"></i>
         </button>
@@ -49,11 +50,12 @@
             <span>Cart</span>
         </a>
 
-        <!-- Seller -->
+        {% if not session.get('super_id') %}
         <a href="/merchant-login" class="nav-link">
             <i class="bi bi-shop-window"></i>
             <span>Become a Seller</span>
         </a>
+        {% endif %}
 
         <!-- Dark Mode -->
         <div class="theme-toggle">
@@ -64,12 +66,32 @@
         </div>
 
         {% if session.get('user_id') %}
-        <div class="nav-user">
-            <i class="bi bi-person-circle nav-icon"></i>
-            {% set display_name = session.get('user_name', '').split(' ')[0] %}
-            <span>Hi, {{ display_name }}</span>
+        <div class="nav-user-dropdown">
+            <a href="/user/profile" class="nav-user"
+                style="text-decoration: none; display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-person-circle nav-icon"></i>
+                {% set display_name = session.get('user_name', '').split(' ')[0] %}
+                <span>Hi, {{ display_name }} <i class="bi bi-chevron-down" style="font-size: 10px;"></i></span>
+            </a>
+            <div class="dropdown-menu">
+                <a href="/user/profile" class="dropdown-item">
+                    <i class="bi bi-person-badge"></i>
+                    <span>My Profile</span>
+                </a>
+                <a href="/user/my-orders" class="dropdown-item">
+                    <i class="bi bi-bag-check"></i>
+                    <span>My Orders</span>
+                </a>
+                <a href="/user/cart" class="dropdown-item">
+                    <i class="bi bi-cart3"></i>
+                    <span>My Cart</span>
+                </a>
+                <a href="/user-logout" class="dropdown-item" style="color: #ff4343;">
+                    <i class="bi bi-box-arrow-right" style="color: #ff4343;"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
         </div>
-        <a href="/user-logout" class="btn-login">Logout</a>
         {% else %}
         <a href="/user-login" class="btn-login">Login</a>
         {% endif %}
@@ -83,16 +105,21 @@
         </div>
         <div class="sidebar-content">
             {% if session.get('user_id') %}
-            <div class="sidebar-user">
+            <a href="/user/profile" class="sidebar-user" style="text-decoration: none;">
                 <i class="bi bi-person-circle"></i>
                 <span>Hi, {{ session.get('user_name', 'User') }}</span>
-            </div>
+            </a>
             {% endif %}
 
             <a href="/" class="sidebar-link"><i class="bi bi-house-door"></i> Home</a>
             <a href="/user/cart" class="sidebar-link"><i class="bi bi-cart3"></i> My Cart</a>
             <a href="/user/my-orders" class="sidebar-link"><i class="bi bi-bag-check"></i> My Orders</a>
-            <a href="/merchant-login" class="sidebar-link"><i class="bi bi-shop-window"></i> Become a Seller</a>
+            {% if not session.get('super_id') %}
+            <a href="/merchant-login" class="sidebar-link">
+                <i class="bi bi-shop-window"></i>
+                Become a Seller
+            </a>
+            {% endif %}
 
             <div class="sidebar-divider"></div>
 
@@ -115,5 +142,30 @@
         </div>
     </div>
     <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <!-- Mobile Bottom Navigation (App-like Experience) -->
+    <div class="mobile-bottom-nav">
+        <a href="/"
+            class="bottom-nav-item {% if request.path == '/' or request.path == '/user/products' %}active{% endif %}">
+            <i class="bi bi-house-door"></i>
+            <span>Home</span>
+        </a>
+        <a href="/user/products" class="bottom-nav-item" id="bottomNavExplore">
+            <i class="bi bi-search"></i>
+            <span>Explore</span>
+        </a>
+        <a href="/user/my-orders" class="bottom-nav-item {% if request.path == '/user/my-orders' %}active{% endif %}">
+            <i class="bi bi-bag-check"></i>
+            <span>Orders</span>
+        </a>
+        <a href="/user/profile" class="bottom-nav-item {% if request.path == '/user/profile' %}active{% endif %}">
+            <i class="bi bi-person"></i>
+            <span>Profile</span>
+        </a>
+        <a href="/user/cart" class="bottom-nav-item {% if request.path == '/user/cart' %}active{% endif %}">
+            <i class="bi bi-cart3"></i>
+            <span class="cart-badge-dot">Cart</span>
+        </a>
+    </div>
 
 </nav>

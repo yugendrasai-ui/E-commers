@@ -1,26 +1,479 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Admin Dashboard</title>
-</head>
-<body>
-<!-- Flash messages -->
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% for category, message in messages %}
-    <p style="color:green;">{{ message }}</p>
-  {% endfor %}
-{% endwith %}
+{% extends 'base.html' %}
 
-<h2>Welcome, {{ admin_name }}</h2>
+{% block title %}Merchant Dashboard - Express-Kart{% endblock %}
 
-<!-- Logout Button -->
-<a href="/admin-logout">Logout</a>
+{% block content %}
+<div class="dash-content-wrap">
+  <div class="header">
+    <h1>Dashboard</h1>
+    <div class="user-info">
+      <span>Welcome, {{ session['merchant_name'] }}</span>
+      <button class="btn-settings"><i class="fas fa-cog"></i></button>
+    </div>
+  </div>
 
-<p>This is your admin dashboard.</p>
+  <div class="dashboard-inner">
+    <!-- New Order Notifications -->
+    {% if notifications %}
+    <div class="notifications-section">
+      <h3>🆕 New Order Requests</h3>
+      <div class="notes-grid">
+        {% for note in notifications %}
+        <div class="note-card">
+          <div class="note-left">
+            <div class="note-icon"><i class="fas fa-shopping-bag"></i></div>
+            <div class="note-info">
+              <div class="note-title">{{ note.product_name }}</div>
+              <div class="note-meta">Customer: {{ note.customer_name }} | Qty: {{ note.quantity }}</div>
+            </div>
+          </div>
+          <div class="note-right">
+            <div class="note-time">{{ note.created_at }}</div>
+            <a href="/merchant/mark-seen/{{ note.item_id }}" class="btn-ack">Acknowledge</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
 
-<a href="/admin/item-list">View Products</a>
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div>
+          <div class="stat-title">Total Products</div>
+          <div class="stat-value">{{ total_products }}</div>
+        </div>
+        <div class="stat-icon"><i class="fas fa-box"></i></div>
+      </div>
+      <div class="stat-card success">
+        <div>
+          <div class="stat-title">Total Orders</div>
+          <div class="stat-value">{{ total_orders }}</div>
+        </div>
+        <div class="stat-icon"><i class="fas fa-shopping-bag"></i></div>
+      </div>
+      <div class="stat-card info">
+        <div>
+          <div class="stat-title">Total Revenue</div>
+          <div class="stat-value">₹{{ "{:,.2f}".format(total_revenue) }}</div>
+        </div>
+        <div class="stat-icon"><i class="fas fa-coins"></i></div>
+      </div>
+      <div class="stat-card warning">
+        <div>
+          <div class="stat-title">Profit Gained</div>
+          <div class="stat-value">₹{{ "{:,.2f}".format(total_profit) }}</div>
+        </div>
+        <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+      </div>
+    </div>
 
+    <!-- Charts Grid -->
+    <div class="charts-grid">
+      <div class="chart-container">
+        <div class="chart-header">
+          <h3>Sales Overview (by Category)</h3>
+        </div>
+        <canvas id="salesBarChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <div class="chart-header">
+          <h3>Revenue Sources</h3>
+        </div>
+        <canvas id="revenuePieChart"></canvas>
+      </div>
+    </div>
 
+    <!-- Recent Orders Table -->
+    <div class="table-container">
+      <div class="table-header">
+        <h3>Recent Orders</h3>
+        <a href="/merchant/orders" class="btn-view-all">View All</a>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Amount</th>
+            <th>Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in recent_orders %}
+          <tr>
+            <td>#{{ order.order_id }}</td>
+            <td>{{ order.customer_name }}</td>
+            <td>₹{{ "{:,.2f}".format(order.amount) }}</td>
+            <td>{{ order.created_at }}</td>
+            <td><span class="status-badge status-paid">{{ order.payment_status }}</span></td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="5" style="text-align: center;">No orders yet.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
-</body>
-</html>
+<style>
+  :root {
+    --primary-color: #4e73df;
+    --success-color: #1cc88a;
+    --info-color: #36b9cc;
+    --warning-color: #f6c23e;
+    --card-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+  }
+
+  .dash-content-wrap {
+    padding-bottom: 40px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    background: white;
+    padding: 18px 25px;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  body.dark .header {
+    background: #1e2a3a !important;
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .header h1 {
+    font-size: 22px;
+    color: #3a3b45;
+  }
+
+  body.dark .header h1,
+  body.dark .ah-left h1,
+  body.dark .oh-left h1 {
+    color: #fff !important;
+  }
+
+  body.dark .ah-left p,
+  body.dark .oh-left p {
+    color: #aaa !important;
+  }
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: #858796;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  body.dark .user-info {
+    color: #aaa;
+  }
+
+  /* Stats Grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+  }
+
+  .stat-card {
+    background: white;
+    padding: 22px;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    border-left: 5px solid var(--primary-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  body.dark .stat-card {
+    background: #1a1a1a;
+  }
+
+  .stat-card.success {
+    border-left-color: var(--success-color);
+  }
+
+  .stat-card.info {
+    border-left-color: var(--info-color);
+  }
+
+  .stat-card.warning {
+    border-left-color: var(--warning-color);
+  }
+
+  .stat-title {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--primary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+  }
+
+  .stat-card.success .stat-title {
+    color: var(--success-color);
+  }
+
+  .stat-card.info .stat-title {
+    color: var(--info-color);
+  }
+
+  .stat-card.warning .stat-title {
+    color: var(--warning-color);
+  }
+
+  .stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #444;
+  }
+
+  body.dark .stat-value {
+    color: #fff;
+  }
+
+  .stat-icon {
+    font-size: 32px;
+    color: #eaecf4;
+  }
+
+  /* Charts */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 25px;
+    margin-bottom: 25px;
+  }
+
+  .chart-container {
+    background: white;
+    padding: 22px;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    height: 380px;
+  }
+
+  body.dark .chart-container {
+    background: #1a1a1a;
+  }
+
+  .chart-header {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .chart-header h3 {
+    font-size: 15px;
+    color: var(--primary-color);
+    font-weight: 700;
+  }
+
+  /* Table */
+  .table-container {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    overflow-x: auto;
+  }
+
+  body.dark .table-container {
+    background: #1a1a1a;
+  }
+
+  .table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .table-header h3 {
+    font-size: 16px;
+    color: var(--primary-color);
+    font-weight: 700;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th {
+    text-align: left;
+    padding: 12px;
+    font-size: 13px;
+    color: #858796;
+    font-weight: 700;
+    border-bottom: 2px solid #f0f0f0;
+  }
+
+  td {
+    padding: 15px 12px;
+    font-size: 14px;
+    border-bottom: 1px solid #f0f0f0;
+    color: #444;
+  }
+
+  body.dark td {
+    color: #ccc;
+    border-color: #333;
+  }
+
+  .status-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .status-paid {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  /* Notifications */
+  .note-card {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    border-left: 5px solid #4e73df;
+    box-shadow: var(--card-shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  body.dark .note-card {
+    background: #1a1a1a;
+  }
+
+  .note-title {
+    font-weight: 700;
+    color: #4e73df;
+  }
+
+  .note-meta {
+    font-size: 12px;
+    color: #858796;
+  }
+
+  .note-icon {
+    width: 40px;
+    height: 40px;
+    background: #f0f3ff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4e73df;
+    font-size: 18px;
+  }
+
+  .btn-ack {
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    background: #4e73df;
+    padding: 6px 15px;
+    border-radius: 6px;
+  }
+
+  @media (max-width: 992px) {
+    .charts-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .chart-container {
+      height: 250px;
+    }
+
+    .header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+
+    th:nth-child(4),
+    td:nth-child(4) {
+      display: none;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  (function () {
+    var salesLabels = {{ categories | tojson
+  }};
+  var salesData = {{ sold_counts | tojson }};
+  var pieLabels = {{ revenue_labels | tojson }};
+  var pieData = {{ revenue_values | tojson }};
+
+  // Sales Bar Chart
+  var ctxBar = document.getElementById('salesBarChart').getContext('2d');
+  new Chart(ctxBar, {
+    type: 'bar',
+    data: {
+      labels: salesLabels,
+      datasets: [{
+        label: 'Units Sold',
+        data: salesData,
+        backgroundColor: 'rgba(78, 115, 223, 0.8)',
+        borderColor: 'rgba(78, 115, 223, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+
+  // Revenue Doughnut Chart
+  var ctxPie = document.getElementById('revenuePieChart').getContext('2d');
+  new Chart(ctxPie, {
+    type: 'doughnut',
+    data: {
+      labels: pieLabels,
+      datasets: [{
+        data: pieData,
+        backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'],
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } },
+      cutout: '70%'
+    }
+  });
+  }) ();
+</script>
+{% endblock %}

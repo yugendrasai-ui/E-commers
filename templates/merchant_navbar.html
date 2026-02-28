@@ -1,101 +1,557 @@
-<nav class="navbar admin-navbar">
+<!-- Lordicon CDN -->
+<script src="https://cdn.lordicon.com/lordicon.js"></script>
 
-    <!-- Left: Logo + Admin Badge -->
+<!-- Top Navbar: only shown on login/signup pages (not when merchant is logged in) -->
+{% if not session.get('merchant_id') %}
+<nav class="navbar admin-navbar seller-navbar">
     <div class="nav-left">
-        <a href="/merchant/item-list" class="logo">EXPRESS-MERCHANTS</a>
-        <span class="admin-badge {% if session.get('admin_role') == 'super_admin' %}super-badge{% endif %}">
-            MERCHANT{% if session.get('admin_role') == 'super_admin' %} - SUPER{% endif %}
-        </span>
+        {% if session.get('merchant_id') %}
+        <button id="merchantSidebarToggle" class="sidebar-btn" aria-label="Open menu">
+            <i class="bi bi-list"></i>
+        </button>
+        {% endif %}
+        <a href="/merchant/dashboard" class="logo">EXPRESS-KART</a>
+        <span class="admin-badge">SELLER</span>
     </div>
 
     <!-- Center: Search -->
-    <form action="/merchant/item-list" method="GET" class="nav-search main-search">
+    <form action="{% if session.get('merchant_id') %}/merchant/item-list{% else %}/user/products{% endif %}"
+        method="GET" class="nav-search main-search">
         <select name="category" class="search-category">
-            <option value="">All</option>
+            <option value="">All Categories</option>
             {% for cat in categories %}
             <option value="{{ cat.category }}" {% if request.args.get('category')==cat.category %} selected {% endif %}>
-                {{ cat.category }}
-            </option>
+                {{ cat.category }}</option>
             {% endfor %}
         </select>
-        <input type="text" name="search" placeholder="Search your products..."
-            value="{{ request.args.get('search','') }}">
-        <button type="submit">
-            <i class="bi bi-search"></i>
-        </button>
+        <input type="text" name="search" placeholder="Search products..." value="{{ request.args.get('search','') }}">
+        <button type="submit"><i class="bi bi-search"></i></button>
     </form>
 
-    <!-- Right: Admin Menu -->
     <div class="nav-right desktop-only">
-        {% if session.get('admin_id') is not none %}
-        <!-- Manage Products -->
-        <a href="/merchant/item-list" class="nav-link">
-            <i class="bi bi-box-seam"></i>
-            <span>My Products</span>
+        <!-- Home -->
+        <a href="/" class="nav-link">
+            <span class="icon-wrap">
+                <lord-icon src="https://cdn.lordicon.com/jeuxydnh.json" trigger="hover" colors="primary:#ffffff"
+                    style="width:22px;height:22px">
+                </lord-icon>
+            </span>
+            <span>Home</span>
         </a>
 
-        <!-- Add Product -->
-        <a href="/merchant/add-item" class="nav-link">
-            <i class="bi bi-plus-circle"></i>
-            <span>Add Product</span>
+        <!-- Cart -->
+        <a href="/user/cart" class="nav-link">
+            <span class="icon-wrap">
+                <lord-icon src="https://cdn.lordicon.com/uisoczqi.json" trigger="hover" colors="primary:#ffffff"
+                    style="width:22px;height:22px">
+                </lord-icon>
+            </span>
+            <span>Cart</span>
         </a>
 
-        <!-- Admin Name -->
-        <div class="nav-user">
-            <i class="bi bi-person-badge"></i>
-            <span>Hi, {{ session.get('admin_name', 'Merchant') }}</span>
+        <!-- Customer Link (Only for Login/Signup pages) -->
+        {% if not session.get('merchant_id') %}
+        <a href="/user-login" class="nav-link">
+            <i class="bi bi-person-circle"></i>
+            <span>Are you a customer?</span>
+        </a>
+        {% endif %}
+
+        <!-- Dark Mode (visible on all screen sizes) -->
+        <div class="theme-toggle" style="display:flex; align-items:center; gap:6px;">
+            <label class="switch">
+                <input type="checkbox" id="darkToggle">
+                <span class="slider"></span>
+            </label>
         </div>
 
-        <a href="/merchant-logout" class="btn-login">Logout</a>
+        {% if session.get('merchant_id') %}
+        <a href="/merchant/profile" class="nav-user" style="text-decoration: none;">
+            <i class="bi bi-person-circle"></i>
+            <span>{{ session.get('merchant_name', 'Merchant') }}</span>
+        </a>
+        <a href="/merchant-logout" class="btn-login" style="margin-left: 15px;">Logout</a>
         {% else %}
-        <a href="/merchant-login" class="btn-login">Merchant Login</a>
-        <a href="/merchant-signup" class="btn-login" style="background:transparent; border:1px solid #fff;">Signup</a>
+        <a href="/merchant-login" class="btn-login">Login</a>
         {% endif %}
     </div>
-
 </nav>
+{% endif %}{# end if not merchant_id - top nav hidden for logged-in merchants #}
+
+{% if session.get('merchant_id') %}
+<!-- Mobile-only compact header (sidebar toggle for mobile) -->
+<div class="merchant-mobile-topbar">
+    <button id="merchantSidebarToggle" aria-label="Open menu"
+        style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;">
+        <i class="bi bi-list"></i>
+    </button>
+    <span style="color:#fff;font-weight:700;font-size:15px;letter-spacing:0.5px;">SELLER CENTRAL</span>
+</div>
+
+<!-- Persistent Desktop Sidebar + Mobile Drawer -->
+<div id="merchantSidebar" class="merchant-sidebar">
+    <div class="sidebar-brand-wrap">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-shop"></i>
+            <span>Seller Central</span>
+        </div>
+        <button id="merchantSidebarClose" class="sidebar-close mobile-only">&times;</button>
+    </div>
+
+    <div class="sidebar-content">
+        <a href="/merchant/profile" class="sidebar-user" style="text-decoration: none;">
+            <i class="bi bi-person-circle"></i>
+            <span>Hi, {{ session.get('merchant_name', 'Seller') }}</span>
+        </a>
+
+        <div class="sidebar-heading">Main</div>
+        <a href="/merchant/dashboard"
+            class="sidebar-link {% if request.path == '/merchant/dashboard' %}active{% endif %}">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+
+        <div class="sidebar-heading">Catalog</div>
+        <a href="/merchant/item-list"
+            class="sidebar-link {% if request.path == '/merchant/item-list' %}active{% endif %}">
+            <i class="bi bi-boxes"></i> Products
+        </a>
+        <a href="/merchant/add-item"
+            class="sidebar-link {% if request.path == '/merchant/add-item' %}active{% endif %}">
+            <i class="bi bi-plus-circle"></i> Add Product
+        </a>
+
+        <div class="sidebar-heading">Sales</div>
+        <a href="/merchant/orders" class="sidebar-link {% if request.path == '/merchant/orders' %}active{% endif %}">
+            <i class="bi bi-bag-check"></i> Orders
+        </a>
+
+        <div class="sidebar-heading">Account</div>
+        <a href="/merchant/profile" class="sidebar-link {% if request.path == '/merchant/profile' %}active{% endif %}">
+            <i class="bi bi-person-badge"></i> My Profile
+        </a>
+        <a href="/merchant-logout" class="sidebar-link logout">
+            <i class="bi bi-box-arrow-right"></i> Logout
+        </a>
+
+        <!-- Dark Mode Toggle in Sidebar -->
+        <div class="sidebar-divider" style="border-top: 1px solid rgba(255,255,255,0.08); margin: 12px 0;"></div>
+        <div class="sidebar-link"
+            style="display:flex; align-items:center; justify-content:space-between; cursor:default;">
+            <span><i class="bi bi-moon"></i> Dark Mode</span>
+            <label class="switch" style="margin:0;">
+                <input type="checkbox" id="darkToggleSidebar"
+                    onchange="document.getElementById('darkToggle').checked = this.checked; document.getElementById('darkToggle').dispatchEvent(new Event('change'));">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+</div>
+
+<div id="merchantSidebarOverlay" class="sidebar-overlay"></div>
+{% endif %}
 
 <style>
-    .admin-navbar {
+    /* Merchant Specific Layout - Dark Theme */
+    .merchant-body {
+        background: #f8f9fc;
+    }
+
+    /* Compact Mobile Topbar (hamburger bar for mobile only) */
+    .merchant-mobile-topbar {
+        display: none;
+        position: sticky;
+        top: 0;
+        z-index: 1050;
+        background: #172337;
+        height: 52px;
+        padding: 0 16px;
+        align-items: center;
+        gap: 14px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    }
+
+    @media (max-width: 992px) {
+        .merchant-mobile-topbar {
+            display: flex;
+        }
+    }
+
+    .merchant-body .container {
+        margin-left: 280px;
+        width: calc(100% - 280px);
+        max-width: none;
+        padding: 20px;
+        transition: all 0.3s;
+    }
+
+    .admin-navbar.seller-navbar {
         background: #172337 !important;
         color: white;
-    }
-
-    .admin-navbar .logo {
-        color: white !important;
-    }
-
-    .admin-badge {
-        background: #fb641b;
-        color: white;
-        font-size: 10px;
-        padding: 2px 6px;
-        border-radius: 2px;
-        margin-left: 8px;
-        font-weight: 600;
-        vertical-align: middle;
-    }
-
-    .admin-badge.super-badge {
-        background: #000;
-    }
-
-    .admin-navbar .nav-link,
-    .admin-navbar .nav-user {
-        color: white !important;
+        padding: 0 20px;
+        height: 60px;
+        z-index: 1050;
+        position: sticky;
+        top: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         display: flex;
         align-items: center;
-        gap: 6px;
-        font-size: 14px;
-        margin-left: 20px;
-        text-decoration: none;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     }
 
-    .admin-navbar .nav-link i,
-    .admin-navbar .main-search button i {
+    body.dark .admin-navbar.seller-navbar {
+        background: #000 !important;
+        border-bottom-color: #333;
+    }
+
+    .sidebar-btn {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: 0.2s;
+        font-size: 20px;
+    }
+
+    .sidebar-btn:hover {
+        background: rgba(40, 116, 240, 0.2);
+        border-color: #2874f0;
+    }
+
+    /* Fixed Sidebar - Dark Theme */
+    .merchant-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 280px;
+        background: #172337;
+        background-image: linear-gradient(180deg, #172337 0%, #0c1421 100%);
+        color: white;
+        z-index: 2100;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow-y: auto;
+        box-shadow: 4px 0 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .sidebar-brand-wrap {
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px 0 25px;
+        font-weight: 700;
         font-size: 18px;
+        color: white;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.2);
+    }
+
+    body.dark .sidebar-brand-wrap {
+        background: #000;
+        border-bottom-color: #333;
+    }
+
+    .sidebar-brand-wrap>div {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .sidebar-heading {
+        padding: 25px 25px 10px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 25px;
+        text-decoration: none;
+        color: rgba(255, 255, 255, 0.7) !important;
+        font-size: 14px;
+        transition: 0.2s;
+        margin: 4px 15px;
+        border-radius: 8px;
+    }
+
+    .sidebar-link i {
+        font-size: 18px;
+        width: 20px;
+        text-align: center;
+    }
+
+    .sidebar-link:hover {
+        background: rgba(255, 255, 255, 0.08);
         color: white !important;
     }
 
-    /* Admin Links */
+    .sidebar-link.active {
+        background: #2874f0;
+        color: white !important;
+        box-shadow: 0 4px 12px rgba(40, 116, 240, 0.3);
+    }
+
+    .sidebar-link.logout {
+        color: #ff4343 !important;
+    }
+
+    .sidebar-close-wrap {
+        padding: 15px;
+        text-align: right;
+    }
+
+    .sidebar-close {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: white;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        font-size: 24px;
+        cursor: pointer;
+    }
+
+    .sidebar-user {
+        padding: 15px 25px;
+        background: rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #2874f0;
+        font-weight: 600;
+        font-size: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .sidebar-user i {
+        font-size: 20px;
+    }
+
+    /* Overlay */
+    .sidebar-overlay {
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 2050;
+    }
+
+    /* Utilities */
+    .mobile-only {
+        display: none;
+    }
+
+    @media (max-width: 992px) {
+        .mobile-only {
+            display: block;
+        }
+
+        .desktop-only {
+            display: none;
+        }
+
+        .merchant-body .container {
+            margin-left: 0;
+            width: 100%;
+            padding: 15px;
+            padding-bottom: 80px;
+        }
+
+        .merchant-sidebar {
+            transform: translateX(-280px);
+        }
+
+        .merchant-sidebar.active {
+            transform: translateX(0);
+        }
+
+        .sidebar-btn {
+            display: flex !important;
+        }
+
+        .merchant-mobile-bottom-nav .nav-right {
+            display: none !important;
+        }
+    }
+
+    /* Merchant Mobile Bottom Navigation */
+    .merchant-bottom-nav {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        background: #172337;
+        z-index: 1100;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        justify-content: space-around;
+        align-items: center;
+        padding: 0 10px;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .merchant-bottom-nav a {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: rgba(255, 255, 255, 0.6);
+        text-decoration: none;
+        font-size: 10px;
+        gap: 3px;
+        padding: 5px 12px;
+        border-radius: 8px;
+        transition: color 0.2s;
+    }
+
+    .merchant-bottom-nav a i {
+        font-size: 20px;
+    }
+
+    .merchant-bottom-nav a.active {
+        color: #fff;
+        background: rgba(78, 154, 241, 0.3);
+        border-radius: 10px;
+        position: relative;
+        box-shadow: 0 0 15px rgba(78, 154, 241, 0.2);
+    }
+
+    body.dark .merchant-bottom-nav a.active {
+        background: rgba(78, 154, 241, 0.4);
+        box-shadow: 0 0 20px rgba(78, 154, 241, 0.3);
+    }
+
+    .merchant-bottom-nav a.active i {
+        color: #4e9af1;
+        font-size: 22px;
+        filter: drop-shadow(0 0 5px rgba(78, 154, 241, 0.5));
+    }
+
+    body.dark .merchant-bottom-nav a.active i {
+        color: #6da6f2;
+    }
+
+    .merchant-bottom-nav a.active::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 30px;
+        height: 3px;
+        background: #4e9af1;
+        border-radius: 0 0 4px 4px;
+    }
+
+    .merchant-bottom-nav a:hover {
+        color: #4e9af1;
+    }
+
+    @media (max-width: 992px) {
+        .merchant-bottom-nav {
+            display: flex;
+        }
+    }
 </style>
+
+{% if session.get('merchant_id') %}
+<!-- Merchant Mobile Bottom Navigation -->
+<div class="merchant-bottom-nav">
+    <a href="/merchant/dashboard" class="{% if request.path == '/merchant/dashboard' %}active{% endif %}">
+        <i class="bi bi-speedometer2"></i>
+        <span>Dashboard</span>
+    </a>
+    <a href="/merchant/item-list" class="{% if request.path == '/merchant/item-list' %}active{% endif %}">
+        <i class="bi bi-boxes"></i>
+        <span>Products</span>
+    </a>
+    <a href="/merchant/orders" class="{% if request.path == '/merchant/orders' %}active{% endif %}">
+        <i class="bi bi-bag-check"></i>
+        <span>Orders</span>
+    </a>
+    <a href="/merchant/profile" class="{% if request.path == '/merchant/profile' %}active{% endif %}">
+        <i class="bi bi-person"></i>
+        <span>Profile</span>
+    </a>
+    <a href="javascript:void(0);"
+        onclick="if(window.applyDarkMode) window.applyDarkMode(!document.body.classList.contains('dark'));"
+        id="bottomDarkToggle">
+        <i class="bi bi-moon" id="bottomDarkIcon"></i>
+        <span>Theme</span>
+    </a>
+</div>
+{% endif %}
+
+{% if session.get('merchant_id') %}
+<script>
+    (function () {
+        const toggle = document.getElementById('merchantSidebarToggle');
+        const sidebar = document.getElementById('merchantSidebar');
+        const closeBtn = document.getElementById('merchantSidebarClose');
+        const overlay = document.getElementById('merchantSidebarOverlay');
+
+        function openSidebar() {
+            sidebar.classList.add('active');
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeSidebar() {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        if (toggle) toggle.addEventListener('click', openSidebar);
+        if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+        if (overlay) overlay.addEventListener('click', closeSidebar);
+
+        // Sync bottom nav dark mode icon with theme
+        const darkToggle = document.getElementById('darkToggle');
+        const sidebarToggle = document.getElementById('darkToggleSidebar');
+        const bottomIcon = document.getElementById('bottomDarkIcon');
+
+        // Core: apply dark mode to body and save to localStorage
+        window.applyDarkMode = function (isDark) {
+            document.body.classList.toggle('dark', isDark);
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            if (darkToggle) darkToggle.checked = isDark;
+            if (sidebarToggle) sidebarToggle.checked = isDark;
+            if (bottomIcon) bottomIcon.className = isDark ? 'bi bi-sun' : 'bi bi-moon';
+        }
+
+        // Initialize state from localStorage
+        const savedDark = localStorage.getItem('theme') === 'dark';
+        window.applyDarkMode(savedDark);
+
+        // Navbar toggle
+        if (darkToggle) {
+            darkToggle.checked = savedDark;
+            darkToggle.addEventListener('change', function () {
+                window.applyDarkMode(this.checked);
+            });
+        }
+
+        // Sidebar toggle
+        if (sidebarToggle) {
+            sidebarToggle.checked = savedDark;
+            sidebarToggle.addEventListener('change', function () {
+                window.applyDarkMode(this.checked);
+            });
+        }
+
+        // Sync state across all tabs
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'theme') {
+                window.applyDarkMode(e.newValue === 'dark');
+            }
+        });
+    })();
+</script>
+{% endif %}

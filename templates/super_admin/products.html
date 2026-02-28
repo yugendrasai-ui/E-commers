@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Products - Super Admin | Express-Kart</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='super_admin.css') }}">
+    <style>
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .page-header h1 {
+            font-size: clamp(1.2rem, 5vw, 1.75rem);
+            color: #3a3b45;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .page-header p {
+            color: #858796;
+            font-size: 14px;
+            margin-top: 2px;
+        }
+
+        .filter-bar {
+            background: #fff;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            width: 100%;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .filter-group label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #858796;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 0.5rem;
+            border: 1px solid #d1d3e2;
+            border-radius: 0.35rem;
+            font-size: 0.85rem;
+            color: #6e707e;
+            outline: none;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .btn-filter {
+            padding: 0.5rem 1.5rem;
+            background: #4e73df;
+            color: #fff;
+            border: none;
+            border-radius: 0.35rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .btn-reset {
+            padding: 0.5rem 1rem;
+            background: #eaecf4;
+            color: #5a5c69;
+            border: 1px solid #d1d3e2;
+            border-radius: 0.35rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .product-img {
+            width: 45px;
+            height: 45px;
+            border-radius: 0.35rem;
+            object-fit: cover;
+            border: 1px solid #e3e6f0;
+        }
+
+        .price {
+            font-weight: 700;
+            color: #3a3b45;
+        }
+
+        .badge-cat {
+            background: #eaecf4;
+            color: #4e73df;
+            padding: 0.2rem 0.6rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            display: inline-block;
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            vertical-align: middle;
+        }
+
+        @media (max-width: 768px) {
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                min-width: 0;
+                width: 100%;
+            }
+
+            .btn-filter,
+            .btn-reset {
+                width: 100%;
+                display: block;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    {% include 'super_admin_navbar.html' %}
+
+    <div class="main-content">
+        <div class="page-header">
+            <div>
+                <h1>Global Product Inventory</h1>
+                <p>Monitor and manage all products across all merchants.</p>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <form class="filter-bar" method="GET" action="/super-admin/products">
+            <div class="filter-group">
+                <label>Search Product</label>
+                <input type="text" name="search" placeholder="Name or ID..." value="{{ search_query }}">
+            </div>
+            <div class="filter-group">
+                <label>Category</label>
+                <select name="category">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}" {% if selected_category==cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn-filter">Filter</button>
+            <a href="/super-admin/products" class="btn-reset">Reset</a>
+        </form>
+
+        <div class="table-card">
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="min-width:60px;">Image</th>
+                            <th style="min-width:160px;">Product Details</th>
+                            <th style="min-width:100px;">Category</th>
+                            <th style="min-width:90px;">Price</th>
+                            <th style="min-width:100px;">Stock</th>
+                            <th style="min-width:120px;">Merchant</th>
+                            <th style="min-width:90px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td><img src="/static/uploads/product_images/{{ product.image }}" class="product-img"
+                                    onerror="this.src='https://via.placeholder.com/50'"></td>
+                            <td>
+                                <div class="product-name-cell" title="{{ product.name }}">{{ product.name }}</div>
+                                <div style="font-size: 0.75rem; color: #858796;">ID: #{{ product.product_id }}</div>
+                            </td>
+                            <td><span class="badge-cat">{{ product.category }}</span></td>
+                            <td class="price">₹{{ "{:,.2f}".format(product.price) }}</td>
+                            <td>
+                                <span
+                                    class="status-pill {% if product.stock > 10 %}status-active{% elif product.stock > 0 %}status-pending{% else %}status-blocked{% endif %}">
+                                    {{ product.stock }} IN STOCK
+                                </span>
+                            </td>
+                            <td>
+                                <div style="font-size: 0.85rem;"><i class="fas fa-store"
+                                        style="color:#4e73df; margin-right:5px;"></i>{{ product.merchant_name }}</div>
+                            </td>
+                            <td>
+                                <a href="/super-admin/delete-product/{{ product.product_id }}"
+                                    class="btn-action btn-block"
+                                    onclick="return confirm('Permanently delete this product from the platform?')">Remove</a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 3rem; color: #858796;">
+                                <i class="fas fa-search"
+                                    style="font-size: 2rem; margin-bottom: 1rem; display: block; opacity: 0.2;"></i>
+                                No products found matching your filters.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

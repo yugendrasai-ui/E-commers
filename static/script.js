@@ -14,18 +14,22 @@ document.addEventListener("DOMContentLoaded", () => {
   function setTheme(isDark) {
     if (isDark) {
       document.body.classList.add("dark");
-      localStorage.setItem("mode", "dark");
+      localStorage.setItem("theme", "dark");
     } else {
       document.body.classList.remove("dark");
-      localStorage.setItem("mode", "light");
+      localStorage.setItem("theme", "light");
     }
     if (desktopToggle) desktopToggle.checked = isDark;
     if (mobileToggle) mobileToggle.checked = isDark;
   }
 
-  // Load saved mode
-  const savedMode = localStorage.getItem("mode");
-  setTheme(savedMode === "dark");
+  // Load saved theme - unification
+  const savedTheme = localStorage.getItem("theme") || localStorage.getItem("mode");
+  if (savedTheme === "dark") {
+    setTheme(true);
+  } else if (savedTheme === "light") {
+    setTheme(false);
+  }
 
   if (desktopToggle) {
     desktopToggle.addEventListener("change", () => setTheme(desktopToggle.checked));
@@ -148,5 +152,68 @@ document.addEventListener("DOMContentLoaded", () => {
       overlay.style.display = "none";
     }
   };
+
+  /* ============================
+     STABLE DROPDOWN LOGIC
+  ============================ */
+  const userDropdown = document.querySelector('.nav-user-dropdown');
+  const dropdownMenu = document.querySelector('.dropdown-menu');
+  let openTimer;
+
+  if (userDropdown && dropdownMenu) {
+    // Hover to open
+    userDropdown.addEventListener('mouseenter', () => {
+      clearTimeout(openTimer);
+      dropdownMenu.classList.add('active-dropdown');
+    });
+
+    // Hover leave to close (with delay)
+    userDropdown.addEventListener('mouseleave', () => {
+      openTimer = setTimeout(() => {
+        dropdownMenu.classList.remove('active-dropdown');
+      }, 800);
+    });
+
+    // Click to TOGGLE/CLOSE
+    userDropdown.addEventListener('click', (e) => {
+      // Don't close if clicking inside the menu items (let the links work)
+      if (e.target.closest('.dropdown-menu')) return;
+
+      e.stopPropagation(); // Prevent closing from the "click anywhere" listener below
+
+      const isOpen = dropdownMenu.classList.contains('active-dropdown');
+      if (isOpen) {
+        dropdownMenu.classList.remove('active-dropdown');
+        clearTimeout(openTimer);
+      } else {
+        dropdownMenu.classList.add('active-dropdown');
+      }
+    });
+
+    // Click anywhere else to close
+    document.addEventListener('click', () => {
+      dropdownMenu.classList.remove('active-dropdown');
+    });
+  }
+
+  /* ============================
+     MOBILE BOTTOM NAV: EXPLORE
+  ============================ */
+  const exploreBtn = document.getElementById('bottomNavExplore');
+  const mainSearchInput = document.getElementById('mainSearchInput');
+
+  if (exploreBtn && mainSearchInput) {
+    exploreBtn.addEventListener('click', (e) => {
+      // Only trigger if we are on a page where the search bar exists and we want to focus it 
+      // instead of navigating (e.g., if already on home or products page)
+      if (window.innerWidth <= 768) {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setTimeout(() => {
+          mainSearchInput.focus();
+        }, 300); // Wait for scroll
+      }
+    });
+  }
 
 });

@@ -5,7 +5,7 @@
 {% block content %}
 <div class="admin-products-header">
     <div class="ah-left">
-        <h1>My Products ({{ products|length }})</h1>
+        <h1>Dashboard / Products ({{ products|length }})</h1>
         <p>Manage your inventory and update product details.</p>
     </div>
     <div class="ah-right">
@@ -32,7 +32,7 @@
 
             <div class="price-box">
                 <span class="new-price">₹{{ product.price }}</span>
-                <span class="stock-status ps-green">In Stock</span>
+                <span class="stock-status ps-green">{{ product.stock }} In Stock</span>
             </div>
         </div>
 
@@ -79,14 +79,12 @@
         border-color: #333;
     }
 
-    .ah-left h1 {
-        font-size: 22px;
-        margin: 0;
+    body.dark .ah-left h1 {
+        color: #fff !important;
     }
 
-    .ah-left p {
-        color: #878787;
-        margin: 5px 0 0 0;
+    body.dark .ah-left p {
+        color: #aaa !important;
     }
 
     .btn-add-large {
@@ -135,6 +133,20 @@
         color: #ccc;
     }
 
+    body.dark .product-card {
+        background: #1a1a1a !important;
+        border-color: #333 !important;
+        color: #fff !important;
+    }
+
+    body.dark .product-info h3 {
+        color: #fff !important;
+    }
+
+    body.dark .product-info .new-price {
+        color: #4e9af1 !important;
+    }
+
     .act-btn:hover {
         background: #f9f9f9;
         color: #2874f0;
@@ -168,6 +180,29 @@
 
     .empty-admin-state p {
         color: #878787;
+    }
+
+    @media (max-width: 768px) {
+        .admin-products-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .ah-right {
+            width: 100%;
+        }
+
+        .btn-add-large {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .product-container {
+            grid-template-columns: 1fr;
+            padding: 10px;
+        }
     }
 </style>
 {% endblock %}
