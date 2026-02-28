@@ -3,7 +3,38 @@
 ## 1. Project Overview
 Express-Kart is a multi-vendor e-commerce platform built with Flask and SQLite. It provides a complete ecosystem for buyers, sellers, and platform administrators.
 
-## 2. System Architecture
+## 2. Project Folder Structure
+```text
+f:\FlaskApp\Ecommers
+│   app.py                  # Main application entry point
+│   config.py               # Application configuration (DB, Email, Razorpay, Admin)
+│   auth_utils.py           # Authentication helper functions (OTP sending)
+│   forgot_password.py      # Blueprint for password reset logic
+│   init_db.py              # Database initialization script
+│   ecommerce.db            # SQLite database file
+│   requirements.txt        # Project dependencies
+│   README.md               # Quick start guide
+│   DOCUMENTATION.md        # Comprehensive technical documentation
+│   Ecommers_Project_Documentation.pdf # Exported documentation
+│
+├───static/                 # Static assets
+│   ├───css/                # Stylesheets (style.css, auth.css, super_admin.css)
+│   ├───uploads/            # User/Merchant uploaded images
+│   └───script.js           # Frontend interactive scripts
+│
+├───templates/              # Jinja2 HTML templates
+│   ├───auth/               # Authentication templates
+│   ├───merchant/           # Merchant panel templates
+│   ├───super_admin/        # Super Admin panel templates
+│   ├───user/               # User panel templates
+│   ├───base.html           # Main layout template
+│   └───navbar.html         # Navbar component
+│
+└───utils/                  # Backend utility scripts
+    └───pdf_generator.py    # Invoice/Document PDF generation logic
+```
+
+## 3. System Architecture
 The application follows a modular Flask pattern with the following components:
 - **Core Engine (`app.py`)**: Handles routing, session management, and core business logic.
 - **Database (`ecommerce.db`)**: Relational SQLite database.

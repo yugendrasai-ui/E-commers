@@ -9,6 +9,13 @@ Express-Kart is a multi-vendor Flask-based e-commerce application featuring User
 - **Security**: Password hashing with Bcrypt, OTP-based registration, and secure admin access.
 - **Integrations**: Razorpay for payments, Flask-Mail for OTP/notifications, and xhtml2pdf for invoice generation.
 
+## Project Folder Structure
+- `app.py`: Main application route and logic.
+- `config.py`: Centralized configuration (Update credentials here).
+- `static/`: Contains CSS, JS, and product image uploads.
+- `templates/`: HTML templates organized by user role.
+- `utils/`: Helper scripts like the PDF generator.
+
 ## Setup Instructions
 
 ### 1. Prerequisites

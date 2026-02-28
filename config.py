@@ -16,5 +16,5 @@ RAZORPAY_KEY_ID = "rzp_test_SGosgBMMganeTr"
 RAZORPAY_KEY_SECRET = "QmmD02nYxL6q8RW5quq6tPWM"
 
 # Super Admin Credentials
-SUPER_ADMIN_EMAIL = "admin@123"
+SUPER_ADMIN_EMAIL = "yugendrasai797@gmail.com"
 SUPER_ADMIN_PASSWORD = "admin123"
