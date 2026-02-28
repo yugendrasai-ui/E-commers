@@ -60,22 +60,8 @@ Once the server is running, open your web browser and go to:
 
 ---
 
-## PythonAnywhere Troubleshooting
+## Deployment Note: PDF Invoices
 
-If you encounter errors while installing requirements on **PythonAnywhere** (like "Clock skew detected" or "pycairo metadata-generation-failed"):
-
-### 1. Fix for `pycairo` Error
-The error happens because `pycairo` is trying to compile and hitting a bug in the server environment.
-
-**Solution:**
-Run these commands in your PythonAnywhere console:
-```bash
-pip install --no-build-isolation pycairo
-pip install -r requirements.txt
-```
-
-### 2. Emergency Workaround
-If the error persists, you can make the PDF generator optional so the main website still works:
-1. Open `app.py`.
-2. Find line 12: `from utils.pdf_generator import generate_pdf`.
-3. Wrap it in a try-except block or comment it out if you don't need PDFs on the server yet.
+We have switched from `xhtml2pdf` to **ReportLab** for invoice generation. This ensures:
+1. **Easy Installation**: No specialized C headers or "Clock skew" issues on PythonAnywhere.
+2. **Standard Requirements**: Simply run `pip install -r requirements.txt` and it will work out of the box.
