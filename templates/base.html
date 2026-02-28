@@ -77,9 +77,7 @@
         {% block content %}{% endblock %}
     </div>
 
-    {% if not session.get('merchant_id') %}
     {% include 'footer.html' %}
-    {% endif %}
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     {% block scripts %}{% endblock %}
