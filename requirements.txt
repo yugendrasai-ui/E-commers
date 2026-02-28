@@ -2,3 +2,4 @@ Flask
 Flask-Mail
 bcrypt
 razorpay
+reportlab

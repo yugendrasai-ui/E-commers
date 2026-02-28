@@ -1602,12 +1602,10 @@ def download_invoice(order_id):
         flash("Order not found.", "danger")
         return redirect('/user/my-orders')
 
-    # Render invoice HTML
-    html = render_template("user/invoice.html", order=order, items=items)
-
-    pdf = generate_pdf(html)
+    # Generate PDF using reportlab (pass objects directly)
+    pdf = generate_pdf(order, items)
     if not pdf:
-        flash("Error generating PDF", "danger")
+        flash("Error generating PDF invoice. Please try again later.", "danger")
         return redirect('/user/my-orders')
 
     # Prepare response
@@ -1656,12 +1654,10 @@ def super_admin_generate_invoice(order_id):
     cursor.close()
     conn.close()
 
-    # Render using the same template as user
-    html = render_template("user/invoice.html", order=order, items=items)
-
-    pdf = generate_pdf(html)
+    # Generate PDF using reportlab (pass objects directly)
+    pdf = generate_pdf(order, items)
     if not pdf:
-        flash("Error generating PDF", "danger")
+        flash("Error generating PDF invoice. Please try again later.", "danger")
         return redirect(request.referrer or '/merchant/orders')
 
     response = make_response(pdf.getvalue())
