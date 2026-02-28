@@ -20,7 +20,7 @@ def generate_pdf(order, items):
     styles = getSampleStyleSheet()
     
     # Custom styles
-    header_style = ParagraphStyle('HeaderStyle', parent=styles['Heading1'], fontSize=24, spaceAfter=20, textColor=colors.hexColor("#2874f0"))
+    header_style = ParagraphStyle('HeaderStyle', parent=styles['Heading1'], fontSize=24, spaceAfter=20, textColor=colors.HexColor("#2874f0"))
     normal_style = styles['Normal']
     bold_style = ParagraphStyle('BoldStyle', parent=styles['Normal'], fontName='Helvetica-Bold')
 
@@ -54,7 +54,7 @@ def generate_pdf(order, items):
     # Table Styling
     table = Table(data, colWidths=[250, 100, 70, 100])
     table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.hexColor("#172337")),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#172337")),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
