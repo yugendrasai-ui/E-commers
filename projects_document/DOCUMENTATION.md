@@ -96,3 +96,11 @@ The project uses two main stylesheets:
 
 ## 7. Deployment Configuration
 Refer to `deployment_guide.md` for detailed instructions on hosting the platform on PythonAnywhere.
+
+## 8. Integration Testing (Razorpay)
+For payment integration testing, a specific product has been set with a minimal price:
+- **Product**: Digital Sports Watch (Water Resistant)
+- **ID**: 12
+- **Test Price**: ₹1.00
+
+This allows for real transaction testing in Razorpay's test/live environment with minimal cost.

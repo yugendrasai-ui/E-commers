@@ -68,5 +68,8 @@ To change the Super Admin email or password:
 
 *Note: For production, it is highly recommended to use environment variables instead of hard-coded values in `config.py`.*
 
+## Integration Testing (Razorpay)
+For Razorpay integration testing, use **Product ID 12** ("Digital Sports Watch"), which has been set to a test price of **₹1.00**.
+
 ## License
 MIT License.
