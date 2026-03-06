@@ -199,13 +199,23 @@
 
     @media (max-width: 576px) {
         .footer-grid {
-            grid-template-columns: 1fr;
-            gap: 28px;
+            /* Brand full-width, Quick Links + Customer Support side by side, Newsletter full-width */
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        /* Brand section spans both columns */
+        .footer-grid .footer-section:first-child {
+            grid-column: 1 / -1;
+        }
+
+        /* Newsletter section spans both columns */
+        .footer-grid .footer-section:last-child {
+            grid-column: 1 / -1;
         }
 
         .main-footer {
             padding: 36px 0 100px;
-            /* 100px leaves space above the fixed bottom nav */
             margin-top: 30px;
         }
 
@@ -214,8 +224,16 @@
         }
 
         .footer-section h4 {
-            font-size: 15px;
-            margin-bottom: 12px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 8px;
+        }
+
+        .footer-section ul li a {
+            font-size: 13px;
         }
 
         .subscribe-form {
