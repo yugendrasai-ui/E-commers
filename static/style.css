@@ -1698,6 +1698,7 @@ body.dark .payment-option.active {
         gap: 10px;
         padding: 10px 15px;
         display: grid;
+        align-items: center;
     }
 
     .nav-left {
@@ -1705,26 +1706,51 @@ body.dark .payment-option.active {
         width: auto;
         display: flex;
         align-items: center;
+        gap: 8px;
+    }
+
+    .nav-left .logo {
+        font-size: 18px;
+        letter-spacing: 0.5px;
+    }
+
+    .mobile-top-icons {
+        order: 2;
+        display: flex !important;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .mobile-top-icons .nav-link {
+        color: #fff;
+        position: relative;
+    }
+
+    .cart-icon-mobile .cart-badge-dot {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        width: 8px;
+        height: 8px;
+        background: #ff4343;
+        border-radius: 50%;
+        border: 2px solid #172337;
+    }
+
+    body.dark .cart-icon-mobile .cart-badge-dot {
+        border-color: #1e1e1e;
     }
 
     .main-search {
         order: 3;
-        /* Move search to the bottom or end if wrapping, or keep middle if 3 columns */
         width: 100%;
         max-width: none;
-        margin: 5px 0;
-        height: 36px !important;
+        margin: 8px 0 4px 0;
+        height: 42px !important;
         grid-column: 1 / -1;
-        /* Make search bar full width below logo and menu */
-    }
-
-    .nav-right {
-        order: 2;
-        width: auto;
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        gap: 12px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.05);
     }
 
     .search-category {
@@ -2448,8 +2474,24 @@ body.dark .info-group label {
         font-size: 10px;
         font-weight: 500;
         display: block !important;
-        /* Force visible on mobile bottom nav */
     }
+
+    .cart-badge-dot {
+        position: relative;
+    }
+
+    .cart-badge-dot::after {
+        content: '';
+        position: absolute;
+        top: -18px;
+        right: -8px;
+        width: 6px;
+        height: 6px;
+        background: #ff4343;
+        border-radius: 50%;
+    }
+
+    /* Force visible on mobile bottom nav */
 
     .bottom-nav-item.active {
         color: #2874f0;

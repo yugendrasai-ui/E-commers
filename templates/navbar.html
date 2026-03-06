@@ -97,10 +97,21 @@
         {% endif %}
     </div>
 
+    <!-- Mobile Icons (Visible only on top navbar mobile view) -->
+    <div class="nav-right mobile-only mobile-top-icons">
+        <a href="/user/profile" class="nav-link">
+            <i class="bi bi-person-circle" style="font-size: 22px;"></i>
+        </a>
+        <a href="/user/cart" class="nav-link cart-icon-mobile">
+            <i class="bi bi-cart3" style="font-size: 22px;"></i>
+            <span class="cart-badge-dot"></span>
+        </a>
+    </div>
+
     <!-- Mobile Side Menu -->
     <div id="mobileSidebar" class="mobile-sidebar">
         <div class="sidebar-header">
-            <div class="logo">EKART-EXPRESS</div>
+            <div class="logo">EXPRESS-KART</div>
             <button id="sidebarClose" class="sidebar-close">&times;</button>
         </div>
         <div class="sidebar-content">
@@ -108,7 +119,7 @@
             <a href="/user/profile" class="sidebar-user" style="text-decoration: none;">
                 <i class="bi bi-person-circle"></i>
                 <span>Hi, {{ session.get('user_name', 'User') }}</span>
-            </a>
+                / </a>
             {% endif %}
 
             <a href="/" class="sidebar-link"><i class="bi bi-house-door"></i> Home</a>

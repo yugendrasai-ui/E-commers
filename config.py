@@ -12,8 +12,8 @@ MAIL_USERNAME = 'yugendrasai797@gmail.com'
 MAIL_PASSWORD = 'ckcfrfofnknjmkss'
 
 #PayMent Configuration
-RAZORPAY_KEY_ID = "rzp_test_SGosgBMMganeTr"
-RAZORPAY_KEY_SECRET = "QmmD02nYxL6q8RW5quq6tPWM"
+RAZORPAY_KEY_ID = "rzp_live_SO2OyNtnyLYLQQ"
+RAZORPAY_KEY_SECRET = "FZRv4xly9j2QbccfG1S1299e"
 
 # Super Admin Credentials
 SUPER_ADMIN_EMAIL = "yugendrasai797@gmail.com"
