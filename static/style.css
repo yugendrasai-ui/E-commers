@@ -1692,65 +1692,81 @@ body.dark .payment-option.active {
 /* Tablets & Large Phones (max 768px) */
 @media (max-width: 768px) {
     .navbar {
-        grid-template-columns: auto 1fr auto;
-        min-height: 60px;
-        height: auto;
-        gap: 10px;
-        padding: 10px 15px;
-        display: grid;
+        /* Row 1: flex for hamburger | center logo | right icons */
+        display: flex !important;
+        flex-wrap: wrap;
         align-items: center;
+        min-height: 56px;
+        height: auto;
+        padding: 8px 14px;
+        gap: 0;
+        position: relative;
     }
 
     .nav-left {
-        order: 1;
-        width: auto;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
+        flex: 1;
+        z-index: 2;
     }
 
-    .nav-left .logo {
-        font-size: 18px;
-        letter-spacing: 0.5px;
+    /* Center logo absolutely */
+    .nav-left .nav-logo {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 18px !important;
+        letter-spacing: 1px;
+        white-space: nowrap;
+        z-index: 1;
     }
 
+    /* Mobile icons pushed to right */
     .mobile-top-icons {
-        order: 2;
         display: flex !important;
         align-items: center;
-        gap: 15px;
+        gap: 14px;
+        flex: 1;
+        justify-content: flex-end;
+        z-index: 2;
     }
 
     .mobile-top-icons .nav-link {
         color: #fff;
         position: relative;
+        line-height: 1;
+    }
+
+    .cart-icon-mobile {
+        position: relative;
     }
 
     .cart-icon-mobile .cart-badge-dot {
         position: absolute;
-        top: -5px;
-        right: -5px;
+        top: -4px;
+        right: -4px;
         width: 8px;
         height: 8px;
         background: #ff4343;
         border-radius: 50%;
-        border: 2px solid #172337;
+        border: 1.5px solid #172337;
     }
 
     body.dark .cart-icon-mobile .cart-badge-dot {
         border-color: #1e1e1e;
     }
 
+    /* Search bar: full-width row below */
     .main-search {
-        order: 3;
+        flex: 0 0 100%;
         width: 100%;
         max-width: none;
-        margin: 8px 0 4px 0;
+        margin: 8px 0 4px 0 !important;
         height: 42px !important;
-        grid-column: 1 / -1;
         border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(0, 0, 0, 0.05);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        border: 1px solid rgba(0, 0, 0, 0.06);
     }
 
     .search-category {
@@ -2344,9 +2360,11 @@ body.dark .ud-order-row {
 ============================ */
 .container {
     width: 100%;
-    max-width: 1248px;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 0 15px;
+    padding: 20px;
+    min-height: 60vh;
+    /* Ensure footer stays down */
     box-sizing: border-box;
 }
 

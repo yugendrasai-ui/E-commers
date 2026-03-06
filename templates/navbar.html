@@ -3,12 +3,12 @@
 
 <nav class="navbar">
 
-    <!-- Left: Logo -->
+    <!-- Left: Hamburger (mobile) + Logo -->
     <div class="nav-left">
         <button id="sidebarToggle" class="mobile-only sidebar-btn">
             <i class="bi bi-list"></i>
         </button>
-        <a href="/" class="logo">EXPRESS-KART</a>
+        <a href="/" class="logo nav-logo">EXPRESS-KART</a>
     </div>
 
     <!-- Center: Search + Category (Amazon Style) -->
@@ -119,7 +119,7 @@
             <a href="/user/profile" class="sidebar-user" style="text-decoration: none;">
                 <i class="bi bi-person-circle"></i>
                 <span>Hi, {{ session.get('user_name', 'User') }}</span>
-                / </a>
+            </a>
             {% endif %}
 
             <a href="/" class="sidebar-link"><i class="bi bi-house-door"></i> Home</a>

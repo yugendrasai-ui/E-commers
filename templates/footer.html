@@ -200,11 +200,30 @@
     @media (max-width: 576px) {
         .footer-grid {
             grid-template-columns: 1fr;
+            gap: 28px;
         }
 
         .main-footer {
-            padding-bottom: 80px;
-            /* Space for mobile nav items if any */
+            padding: 36px 0 100px;
+            /* 100px leaves space above the fixed bottom nav */
+            margin-top: 30px;
+        }
+
+        .footer-section h3 {
+            font-size: 18px;
+        }
+
+        .footer-section h4 {
+            font-size: 15px;
+            margin-bottom: 12px;
+        }
+
+        .subscribe-form {
+            flex-direction: row;
+        }
+
+        .subscribe-form input {
+            font-size: 13px;
         }
     }
 </style>
