@@ -75,9 +75,21 @@
     <!-- Page Content -->
     <div class="container">
         {% block content %}{% endblock %}
+
+        {% if request.path.startswith('/merchant/') %}
+        {% include 'admin_footer.html' %}
+        {% endif %}
     </div>
 
+    {% if request.path.startswith('/merchant/') %}
+    <div class="merchant-full-footer-mobile">
+        {% include 'footer.html' %}
+    </div>
+    {% endif %}
+
+    {% if not request.path.startswith('/merchant/') %}
     {% include 'footer.html' %}
+    {% endif %}
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     {% block scripts %}{% endblock %}

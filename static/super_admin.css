@@ -36,9 +36,40 @@ body {
     left: 0;
     height: 100vh;
     overflow-y: auto;
+    overflow-x: hidden;
     z-index: 1000;
     padding-bottom: 2rem;
     transition: left 0.3s ease;
+    /* Custom overlay scrollbar — hidden by default */
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+}
+
+/* Webkit: hidden by default */
+.sidebar::-webkit-scrollbar {
+    width: 5px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 10px;
+}
+
+/* Show on hover */
+.sidebar:hover {
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.sidebar:hover::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.sidebar:hover::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4);
 }
 
 .main-content {
@@ -52,15 +83,17 @@ body {
 
 /* Sidebar Brand */
 .sidebar-brand {
-    padding: 0 1.5rem 1.5rem;
+    padding: 1.5rem 1rem;
     display: flex;
     align-items: center;
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: 700;
     color: white;
     text-decoration: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .sidebar-brand i {
@@ -80,15 +113,17 @@ body {
     font-size: 14px;
 }
 
-.nav-item:hover,
-.nav-item.active {
+.nav-item:hover {
     color: white;
     background-color: var(--sidebar-hover);
 }
 
 .nav-item.active {
+    color: white;
+    background: rgba(246, 194, 62, 0.13);
+    border-left: 3px solid var(--warning-color);
+    padding-left: calc(1.5rem - 3px);
     font-weight: 600;
-    border-left: 4px solid var(--warning-color);
 }
 
 .nav-item i {
@@ -154,8 +189,14 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.55);
     z-index: 998;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+}
+
+.admin-sidebar-overlay.active {
+    display: block;
 }
 
 /* Table Card */
@@ -450,6 +491,7 @@ td {
         margin-right: 5px;
     }
 }
+
 /* Product Name Truncation */
 .product-name-cell {
     font-weight: 700;
@@ -467,5 +509,95 @@ td {
     .product-name-cell {
         max-width: 150px;
         font-size: 0.8rem;
+    }
+}
+
+/* ── Super Admin Mobile Bottom Nav ─────────────────────────────── */
+/* Defined here in super_admin.css to guarantee specificity over inline styles */
+.sa-bottom-nav {
+    display: none;
+}
+
+@media (max-width: 992px) {
+    .sa-bottom-nav {
+        display: flex !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 62px;
+        background: var(--sidebar-bg, #1a1c23);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        z-index: 3000;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.35);
+        align-items: stretch;
+    }
+
+    .sa-bottom-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        text-decoration: none;
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 10px;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 500;
+        transition: color 0.2s;
+        padding: 6px 4px;
+        border-top: 3px solid transparent;
+    }
+
+    .sa-bottom-item i {
+        font-size: 18px;
+    }
+
+    .sa-bottom-item.active {
+        color: var(--warning-color, #f6c23e);
+        border-top-color: var(--warning-color, #f6c23e);
+    }
+
+    .sa-bottom-item:hover {
+        color: #fff;
+    }
+
+    .sa-logout {
+        color: rgba(231, 74, 59, 0.7);
+    }
+
+    .sa-logout:hover,
+    .sa-logout.active {
+        color: #e74a3b;
+        border-top-color: #e74a3b;
+    }
+
+    /* Content padding so bottom nav never overlaps */
+    .main-content {
+        padding-bottom: 72px !important;
+    }
+
+    /* Full website footer for Super Admin Mobile */
+    .sa-full-footer-mobile {
+        display: block;
+        margin-bottom: 0;
+    }
+
+    .sa-full-footer-mobile .main-footer {
+        padding-bottom: 110px !important;
+        /* Space for fixed bottom nav bar extension */
+    }
+
+    /* Hide the compact footer on mobile view for SA (optional, cleaner) */
+    .admin-footer-bar {
+        display: none !important;
+    }
+}
+
+/* Hide sa-full-footer-mobile on desktop */
+@media (min-width: 993px) {
+    .sa-full-footer-mobile {
+        display: none;
     }
 }

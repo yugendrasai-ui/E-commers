@@ -1,0 +1,204 @@
+<!-- Compact Admin Footer (GitHub-style) — single clean row -->
+<footer class="admin-footer-bar">
+    <div class="admin-footer-inner">
+        <!-- Unified single-line footer links -->
+        <span class="admin-footer-copy">© 2026 Express-Kart</span>
+        <span class="admin-footer-sep">&nbsp;&middot;&nbsp;</span>
+        <a href="#" class="admin-footer-link">Terms</a>
+        <span class="admin-footer-sep">&nbsp;&middot;&nbsp;</span>
+        <a href="https://mail.google.com/mail/?view=cm&to=yugendrasai797@gmail.com" target="_blank"
+            class="admin-footer-link">Contact</a>
+        <span class="admin-footer-sep">&nbsp;&middot;&nbsp;</span>
+        <a href="https://mail.google.com/mail/?view=cm&to=yugendrasai797@gmail.com" target="_blank"
+            class="admin-footer-link admin-footer-author">🔗 Developed by Yugendra Sai</a>
+
+        <span class="admin-footer-sep desktop-only">&nbsp;&middot;&nbsp;</span>
+        <span class="admin-footer-sep mobile-only">&nbsp;</span>
+
+        <a href="/" class="admin-footer-link admin-footer-nav">🏠 Home</a>
+        <span class="admin-footer-sep">&nbsp;&middot;&nbsp;</span>
+        <a href="/user-login" class="admin-footer-link admin-footer-nav">👤 Login</a>
+        <span class="admin-footer-sep">&nbsp;&middot;&nbsp;</span>
+        <a href="/user/products" class="admin-footer-link admin-footer-nav">🛍️ Shop</a>
+    </div>
+</footer>
+
+<!-- Redundant mobile block removed -->
+
+<style>
+    /* ── Base footer: LIGHT mode — white bg, dark text ────────── */
+    .admin-footer-bar {
+        padding: 18px 28px;
+        margin-top: 15px;
+        background: #ffffff;
+        width: 100%;
+        box-sizing: border-box;
+        /* Ensure padding doesn't cause overflow */
+    }
+
+    .admin-footer-inner {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        /* Center all items in a single line */
+        gap: 8px 12px;
+        font-size: 13px;
+        font-family: 'Poppins', 'Segoe UI', sans-serif;
+        color: #858796;
+        flex-wrap: wrap;
+        width: 100%;
+        text-align: center;
+    }
+
+    /* Remove former grouping styles */
+    .admin-footer-left,
+    .admin-footer-right {
+        display: contents;
+        /* Inherit from parent flex directly */
+    }
+
+    .admin-footer-copy {
+        font-weight: 600;
+        color: #444;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .admin-footer-sep {
+        color: #858796;
+        /* Darker color for visibility */
+        font-weight: bold;
+        font-size: 14px;
+        user-select: none;
+        flex-shrink: 0;
+    }
+
+    .admin-footer-link {
+        color: #858796;
+        text-decoration: none;
+        transition: color 0.15s;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .admin-footer-link:hover {
+        color: #224abe;
+        text-decoration: underline;
+    }
+
+    .admin-footer-author {
+        font-weight: 600;
+    }
+
+    .admin-footer-nav {
+        font-weight: 500;
+    }
+
+    /* ── DARK mode ────────────────────────────────────────────── */
+    body.dark .admin-footer-bar {
+        background: #0d1117;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    body.dark .admin-footer-inner {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    body.dark .admin-footer-copy {
+        color: rgba(255, 255, 255, 0.75);
+    }
+
+    body.dark .admin-footer-sep {
+        color: rgba(255, 255, 255, 0.18);
+    }
+
+    body.dark .admin-footer-link {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    body.dark .admin-footer-link:hover {
+        color: #fff;
+        text-decoration: underline;
+    }
+
+    /* ── Merchant body: removed offsets ─── */
+    .merchant-body .admin-footer-bar {
+        margin-left: 0;
+    }
+
+    /* ── Super-admin ───────────────── */
+    body:not(.merchant-body) .admin-footer-bar {
+        margin-left: 0;
+        background: #ffffff;
+        width: 100%;
+    }
+
+    /* ── Mobile merchant compact text footer ─────────────────── */
+    .merchant-mobile-footer {
+        display: none;
+        /* hidden on desktop */
+    }
+
+    /* ── Responsive ───────────────────────────────────────────── */
+    @media (max-width: 992px) {
+
+        /* Hide the main footer bar on mobile for merchant (show compact one instead) */
+        .merchant-body .admin-footer-bar {
+            display: none;
+        }
+
+        /* Show compact merchant mobile footer above the bottom nav */
+        .merchant-body .merchant-mobile-footer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 4px 8px;
+            padding: 10px 16px;
+            margin-bottom: 62px;
+            /* space for the fixed bottom nav bar */
+            background: #f8f9fc;
+            font-size: 11px;
+            font-family: 'Poppins', 'Segoe UI', sans-serif;
+            color: #858796;
+        }
+
+        body.dark .merchant-body .merchant-mobile-footer {
+            background: #0d1117;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        body.dark .merchant-body .merchant-mobile-footer .admin-footer-link {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        body.dark .merchant-body .merchant-mobile-footer .admin-footer-sep {
+            color: rgba(255, 255, 255, 0.18);
+        }
+
+        /* Hide right nav on super-admin mobile too (bottom nav handles it) */
+        body:not(.merchant-body) .admin-footer-right {
+            display: none;
+        }
+
+        body:not(.merchant-body) .admin-footer-bar {
+            margin-left: 0;
+            margin-bottom: 20px;
+            /* space between compact and full footer */
+        }
+
+        .admin-full-footer-mobile {
+            display: block;
+            margin-bottom: 62px;
+            /* space for fixed bottom nav bar */
+        }
+    }
+
+    /* Hide full footer on desktop */
+    @media (min-width: 993px) {
+        .admin-full-footer-mobile {
+            display: none;
+        }
+    }
+</style>

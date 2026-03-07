@@ -75,13 +75,17 @@
         <div class="chart-header">
           <h3>Sales Overview (by Category)</h3>
         </div>
-        <canvas id="salesBarChart"></canvas>
+        <div class="chart-wrap">
+          <canvas id="salesBarChart"></canvas>
+        </div>
       </div>
       <div class="chart-container">
         <div class="chart-header">
           <h3>Revenue Sources</h3>
         </div>
-        <canvas id="revenuePieChart"></canvas>
+        <div class="chart-wrap">
+          <canvas id="revenuePieChart"></canvas>
+        </div>
       </div>
     </div>
 
@@ -156,15 +160,8 @@
     color: #3a3b45;
   }
 
-  body.dark .header h1,
-  body.dark .ah-left h1,
-  body.dark .oh-left h1 {
+  body.dark .header h1 {
     color: #fff !important;
-  }
-
-  body.dark .ah-left p,
-  body.dark .oh-left p {
-    color: #aaa !important;
   }
 
   .user-info {
@@ -259,16 +256,25 @@
     margin-bottom: 25px;
   }
 
+  /* chart-container: auto height wraps header + chart-wrap */
   .chart-container {
     background: white;
     padding: 22px;
     border-radius: 12px;
     box-shadow: var(--card-shadow);
-    height: 380px;
+    overflow: visible;
+    /* don't clip — labels must show */
   }
 
   body.dark .chart-container {
     background: #1a1a1a;
+  }
+
+  /* chart-wrap: the div Chart.js reads for canvas dimensions */
+  .chart-wrap {
+    position: relative;
+    height: 310px;
+    /* canvas height on desktop — labels fit inside this */
   }
 
   .chart-header {
@@ -397,13 +403,42 @@
     border-radius: 6px;
   }
 
+  .btn-view-all {
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    background: #4e73df;
+    padding: 6px 15px;
+    border-radius: 6px;
+  }
+
+  .btn-settings {
+    background: none;
+    border: 1px solid #ddd;
+    color: #858796;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  /* ── Mobile ──────────────────────────────────────────────────── */
   @media (max-width: 992px) {
     .charts-grid {
       grid-template-columns: 1fr;
     }
 
+    /* chart-container: no fixed height, let content determine it */
     .chart-container {
-      height: 250px;
+      height: auto;
+      overflow: visible;
+      padding-bottom: 16px;
+    }
+
+    /* chart-wrap controls canvas height on mobile */
+    .chart-wrap {
+      height: 220px;
+      /* canvas fits labels inside this exact size */
     }
 
     .header {
@@ -411,16 +446,27 @@
       align-items: flex-start;
       gap: 10px;
     }
+
+    /* extra bottom space so mobile bottom nav doesn't overlap content */
+    .dash-content-wrap {
+      padding-bottom: 80px;
+    }
   }
 
   @media (max-width: 768px) {
     .stats-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr 1fr;
     }
 
     th:nth-child(4),
     td:nth-child(4) {
       display: none;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .stats-grid {
+      grid-template-columns: 1fr;
     }
   }
 </style>
@@ -436,41 +482,66 @@
   var pieLabels = {{ revenue_labels | tojson }};
   var pieData = {{ revenue_values | tojson }};
 
-  // Sales Bar Chart
-  var ctxBar = document.getElementById('salesBarChart').getContext('2d');
-  new Chart(ctxBar, {
+  var isMobile = window.innerWidth < 640;
+
+  function trunc(str, n) {
+    return str.length > n ? str.substr(0, n) + '…' : str;
+  }
+  var barLabels = isMobile ? salesLabels.map(function (l) { return trunc(l, 5); }) : salesLabels;
+  var donutLabels = isMobile ? pieLabels.map(function (l) { return trunc(l, 8); }) : pieLabels;
+
+  // Bar Chart
+  new Chart(document.getElementById('salesBarChart').getContext('2d'), {
     type: 'bar',
     data: {
-      labels: salesLabels,
+      labels: barLabels,
       datasets: [{
         label: 'Units Sold',
         data: salesData,
-        backgroundColor: 'rgba(78, 115, 223, 0.8)',
-        borderColor: 'rgba(78, 115, 223, 1)',
+        backgroundColor: 'rgba(78,115,223,0.8)',
+        borderColor: 'rgba(78,115,223,1)',
         borderWidth: 1
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      scales: { y: { beginAtZero: true } }
+      scales: {
+        y: { beginAtZero: true, ticks: { font: { size: isMobile ? 9 : 11 } } },
+        x: {
+          ticks: {
+            autoSkip: false,
+            maxRotation: isMobile ? 0 : 45,
+            minRotation: 0,
+            font: { size: isMobile ? 8 : 11 }
+          }
+        }
+      }
     }
   });
 
-  // Revenue Doughnut Chart
-  var ctxPie = document.getElementById('revenuePieChart').getContext('2d');
-  new Chart(ctxPie, {
+  // Doughnut Chart
+  new Chart(document.getElementById('revenuePieChart').getContext('2d'), {
     type: 'doughnut',
     data: {
-      labels: pieLabels,
+      labels: donutLabels,
       datasets: [{
         data: pieData,
-        backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'],
+        backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796']
       }]
     },
     options: {
       maintainAspectRatio: false,
-      plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } },
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            boxWidth: isMobile ? 8 : 12,
+            font: { size: isMobile ? 8 : 11 },
+            padding: isMobile ? 5 : 12
+          }
+        }
+      },
       cutout: '70%'
     }
   });

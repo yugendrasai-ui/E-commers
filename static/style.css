@@ -2985,3 +2985,30 @@ body.dark .bottom-nav-item.active span {
         font-size: 13px !important;
     }
 }
+
+/* ── Merchant Full Footer Mobile ─────────────────────────────────── */
+/* The full user-facing footer inside base.html, shown only on mobile merchant page */
+.merchant-full-footer-mobile {
+    display: none;
+    /* hide on desktop */
+}
+
+@media (max-width: 992px) {
+
+    /* Show on mobile for merchant pages only */
+    .merchant-body .merchant-full-footer-mobile {
+        display: block;
+        margin-bottom: 0;
+    }
+
+    .merchant-body .merchant-full-footer-mobile .main-footer {
+        padding-bottom: 100px !important;
+        /* Extension behind the fixed merchant bottom nav */
+    }
+
+    /* Also push admin_footer compact bar down on mobile merchant (we keep both) */
+    .merchant-body .admin-footer-bar {
+        display: none !important;
+        /* hide compact bar on mobile – use full footer */
+    }
+}

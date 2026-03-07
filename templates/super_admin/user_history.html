@@ -107,8 +107,12 @@
         {% else %}
         <p>No orders found for this user.</p>
         {% endfor %}
+        {% include 'admin_footer.html' %}
     </div>
-    {% include 'footer.html' %}
+
+    <div class="sa-full-footer-mobile">
+        {% include 'footer.html' %}
+    </div>
 </body>
 
 </html>

@@ -42,6 +42,98 @@
 </div>
 <div id="adminSidebarOverlay" class="admin-sidebar-overlay"></div>
 
+<!-- ── Super Admin Mobile Bottom Nav ─────────────────────────── -->
+<nav class="sa-bottom-nav">
+    <a href="/super-admin/dashboard"
+        class="sa-bottom-item {% if request.path == '/super-admin/dashboard' %}active{% endif %}">
+        <i class="fas fa-tachometer-alt"></i>
+        <span>Dashboard</span>
+    </a>
+    <a href="/super-admin/merchants"
+        class="sa-bottom-item {% if '/super-admin/merchants' in request.path %}active{% endif %}">
+        <i class="fas fa-store"></i>
+        <span>Merchants</span>
+    </a>
+    <a href="/super-admin/users" class="sa-bottom-item {% if '/super-admin/users' in request.path %}active{% endif %}">
+        <i class="fas fa-users"></i>
+        <span>Users</span>
+    </a>
+    <a href="/super-admin/products"
+        class="sa-bottom-item {% if request.path == '/super-admin/products' %}active{% endif %}">
+        <i class="fas fa-boxes"></i>
+        <span>Products</span>
+    </a>
+    <a href="/super-admin/logout" class="sa-bottom-item sa-logout">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+    </a>
+</nav>
+
+<style>
+    /* ── Super Admin Mobile Bottom Nav ─────────────────────────── */
+    .sa-bottom-nav {
+        display: none;
+        /* hidden on desktop */
+    }
+
+    @media (max-width: 992px) {
+        .sa-bottom-nav {
+            display: flex;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 62px;
+            background: var(--sidebar-bg, #1a1a2e);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 3000;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .sa-bottom-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.55);
+            font-size: 10px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            transition: color 0.2s;
+            padding: 6px 4px;
+        }
+
+        .sa-bottom-item i {
+            font-size: 18px;
+        }
+
+        .sa-bottom-item.active {
+            color: var(--warning-color, #f6c23e);
+            border-top: 3px solid var(--warning-color, #f6c23e);
+        }
+
+        .sa-bottom-item:hover {
+            color: #fff;
+        }
+
+        .sa-logout {
+            color: rgba(231, 74, 59, 0.75);
+        }
+
+        .sa-logout:hover {
+            color: #e74a3b;
+        }
+
+        /* Push main content up so bottom nav doesn't overlap */
+        .main-content {
+            padding-bottom: 70px !important;
+        }
+    }
+</style>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const toggle = document.getElementById('adminSidebarToggle');

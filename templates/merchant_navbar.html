@@ -236,7 +236,39 @@
         z-index: 2100;
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         overflow-y: auto;
+        overflow-x: hidden;
         box-shadow: 4px 0 25px rgba(0, 0, 0, 0.3);
+        /* Hide scrollbar by default, show on hover */
+        scrollbar-width: thin;
+        scrollbar-color: transparent transparent;
+    }
+
+    /* Webkit: hidden by default */
+    .merchant-sidebar::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .merchant-sidebar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .merchant-sidebar::-webkit-scrollbar-thumb {
+        background: transparent;
+        border-radius: 10px;
+        transition: background 0.3s;
+    }
+
+    /* Show scrollbar only when hovering the sidebar */
+    .merchant-sidebar:hover {
+        scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+    }
+
+    .merchant-sidebar:hover::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.25);
+    }
+
+    .merchant-sidebar:hover::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.45);
     }
 
     .sidebar-brand-wrap {
@@ -296,9 +328,18 @@
     }
 
     .sidebar-link.active {
-        background: #2874f0;
+        background: rgba(40, 116, 240, 0.18);
         color: white !important;
-        box-shadow: 0 4px 12px rgba(40, 116, 240, 0.3);
+        font-weight: 600;
+        box-shadow: none;
+        margin: 4px 0;
+        /* flush to sidebar edges — no side gap */
+        border-radius: 0;
+        /* remove rounded corners so no bleed */
+        border-left: 3px solid #2874f0;
+        padding-left: 37px;
+        /* 25px original + 12px margin offset */
+        padding-right: 25px;
     }
 
     .sidebar-link.logout {
@@ -337,10 +378,22 @@
         font-size: 20px;
     }
 
-    /* Overlay */
+    /* Overlay — hidden by default, shown as dark backdrop when sidebar opens on mobile */
     .sidebar-overlay {
-        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.55);
         z-index: 2050;
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+    }
+
+    .sidebar-overlay.active {
+        display: block;
     }
 
     /* Utilities */
