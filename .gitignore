@@ -1,0 +1,12 @@
+# Database
+ecommerce.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Uploads
+static/uploads/product_images/
