@@ -74,11 +74,13 @@ body {
 
 .main-content {
     margin-left: 250px;
-    padding: 2rem;
+    padding: 2rem 2rem 0 2rem;
     min-height: 100vh;
     transition: margin-left 0.3s ease, padding 0.3s ease;
     background-color: var(--body-bg);
     width: auto;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Sidebar Brand */
@@ -593,6 +595,10 @@ td {
     .admin-footer-bar {
         display: none !important;
     }
+}
+
+.admin-footer-bar {
+    margin-top: auto !important;
 }
 
 /* Hide sa-full-footer-mobile on desktop */
