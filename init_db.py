@@ -69,6 +69,30 @@ def init_db():
     ''')
 
     conn.commit()
+
+    # Seed initial data if tables are empty
+    cursor.execute("SELECT COUNT(*) FROM admin")
+    if cursor.fetchone()[0] == 0:
+        import bcrypt
+        # Create a default merchant
+        hashed_password = bcrypt.hashpw("admin123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        cursor.execute("INSERT INTO admin (name, email, password, role) VALUES (?, ?, ?, ?)",
+                       ("Test Merchant", "merchant@example.com", hashed_password, "seller"))
+        merchant_id = cursor.lastrowid
+
+        # Create sample products
+        sample_products = [
+            ("iPhone 16", "Latest Apple iPhone", "Electronics", 79999.00, "Iphone16.jpg", merchant_id),
+            ("Laptop", "High performance laptop", "Electronics", 55000.00, "Laptop.jpg", merchant_id),
+            ("Watch", "Stylish smart watch", "Accessories", 2500.00, "Watch.jpg", merchant_id),
+            ("Shoe", "Comfortable running shoes", "Fashion", 1500.00, "Shoe.jpg", merchant_id),
+            ("TV", "4K Ultra HD Smart TV", "Electronics", 35000.00, "TV.jpg", merchant_id)
+        ]
+        cursor.executemany("INSERT INTO products (name, description, category, price, image, admin_id) VALUES (?, ?, ?, ?, ?, ?)",
+                          sample_products)
+        print("Seed data added successfully.")
+        conn.commit()
+
     conn.close()
     print(f"Database initialized at {config.DB_PATH}")
 
