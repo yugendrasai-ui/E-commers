@@ -86,7 +86,12 @@ def init_db():
             ("Laptop", "High performance laptop", "Electronics", 55000.00, "Laptop.jpg", merchant_id),
             ("Watch", "Stylish smart watch", "Accessories", 2500.00, "Watch.jpg", merchant_id),
             ("Shoe", "Comfortable running shoes", "Fashion", 1500.00, "Shoe.jpg", merchant_id),
-            ("TV", "4K Ultra HD Smart TV", "Electronics", 35000.00, "TV.jpg", merchant_id)
+            ("TV", "4K Ultra HD Smart TV", "Electronics", 35000.00, "TV.jpg", merchant_id),
+            ("Mixer", "Powerful kitchen mixer", "Home", 2500.00, "mixer.jpg", merchant_id),
+            ("Cotton T-Shirt", "100% Pure cotton t-shirt", "Fashion", 500.00, "Mens_Cotton_T-Shirt.webp", merchant_id),
+            ("Pants", "Casual comfortable pants", "Fashion", 1200.00, "pant.jpg", merchant_id),
+            ("Wireless Buds", "Noise-cancelling earbuds", "Electronics", 3000.00, "buds.webp", merchant_id),
+            ("iPhone 15", "Premium Apple iPhone", "Electronics", 65000.00, "i_phone_15.webp", merchant_id)
         ]
         cursor.executemany("INSERT INTO products (name, description, category, price, image, admin_id) VALUES (?, ?, ?, ?, ?, ?)",
                           sample_products)
