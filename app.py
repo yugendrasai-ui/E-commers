@@ -1999,20 +1999,5 @@ if __name__ == '__main__':
     from init_db import init_db
     init_db()
 
-    # DIAGNOSTIC: Test SMTP connection at startup
-    import smtplib
-    try:
-        print(f"DIAGNOSTIC: Testing SMTP to {config.MAIL_SERVER}:{config.MAIL_PORT}...")
-        if config.MAIL_PORT == 465:
-            server = smtplib.SMTP_SSL(config.MAIL_SERVER, config.MAIL_PORT, timeout=10)
-        else:
-            server = smtplib.SMTP(config.MAIL_SERVER, config.MAIL_PORT, timeout=10)
-            server.starttls()
-        server.login(config.MAIL_USERNAME, config.MAIL_PASSWORD)
-        server.quit()
-        print("DIAGNOSTIC: SMTP Connection SUCCESSFUL")
-    except Exception as e:
-        print(f"DIAGNOSTIC: SMTP Connection FAILED: {e}")
-
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=True, host='0.0.0.0', port=port)
