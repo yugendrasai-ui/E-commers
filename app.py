@@ -14,15 +14,51 @@ from auth_utils import send_otp
 
 
 
-# db connection function
+# ---------------- DATABASE ADAPTER ----------------
+class CursorWrapper:
+    def __init__(self, cursor, db_type):
+        self.cursor = cursor
+        self.db_type = db_type
+    def execute(self, query, params=None):
+        if self.db_type == 'postgres':
+            query = query.replace('?', '%s')
+        if params:
+            return self.cursor.execute(query, params)
+        return self.cursor.execute(query)
+    def executemany(self, query, params_list):
+        if self.db_type == 'postgres':
+            query = query.replace('?', '%s')
+        return self.cursor.executemany(query, params_list)
+    def __getattr__(self, name):
+        return getattr(self.cursor, name)
+    def __iter__(self):
+        return iter(self.cursor)
+
+class ConnWrapper:
+    def __init__(self, conn, db_type):
+        self.conn = conn
+        self.db_type = db_type
+    def cursor(self, *args, **kwargs):
+        cursor = self.conn.cursor(*args, **kwargs)
+        return CursorWrapper(cursor, self.db_type)
+    def __getattr__(self, name):
+        return getattr(self.conn, name)
+    def __enter__(self): return self
+    def __exit__(self, exc_type, exc_val, exc_tb): self.conn.close()
+
 def get_db_connection():
-    """
-    This function creates and returns 
-    a connection to the SQLite database.
-    """
-    conn = sqlite3.connect(config.DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+    db_type = getattr(config, 'DB_TYPE', 'sqlite')
+    if db_type == 'postgres':
+        import psycopg2
+        import psycopg2.extras
+        conn = psycopg2.connect(config.DB_PATH, cursor_factory=psycopg2.extras.DictCursor)
+        return ConnWrapper(conn, 'postgres')
+    else:
+        conn = sqlite3.connect(config.DB_PATH)
+        conn.row_factory = sqlite3.Row
+        return ConnWrapper(conn, 'sqlite')
+
+# --------------------------------------------------
 
 
 app=Flask(__name__)

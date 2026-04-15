@@ -1,10 +1,20 @@
 SECRET_KEY = "sai1234"
 
-# SQLite Database Configuration
-DB_PATH = "ecommerce.db"
+# Database Configuration
+import os
+import dj_database_url
 
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if DATABASE_URL:
+    DB_TYPE = "postgres"
+    DB_PATH = DATABASE_URL
+else:
+    DB_TYPE = "sqlite"
+    DB_PATH = os.path.join(os.getcwd(), 'ecommerce.db')
 
 # Email SMTP Settings
+
 MAIL_SERVER = 'smtp.gmail.com'
 MAIL_PORT = 587
 MAIL_USE_TLS = True

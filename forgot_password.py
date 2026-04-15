@@ -7,10 +7,7 @@ import config
 
 forgot_pw = Blueprint('forgot_pw', __name__)
 
-def get_db_connection():
-    conn = sqlite3.connect(config.DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+from app import get_db_connection
 
 
 @forgot_pw.route('/forgot-password', methods=['GET', 'POST'])
