@@ -23,9 +23,11 @@ def send_otp(mail, email, subject, body_template):
         mail.send(msg)
         return True
     except Exception as e:
+        flash(f"Email Error: {str(e)}", "danger")
         with open('email_error.log', 'a') as f:
             f.write(f"Error sending email to {email}: {str(e)}\n")
         return False
+
 
 def verify_otp(user_otp):
     """
