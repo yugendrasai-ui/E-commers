@@ -1881,6 +1881,28 @@ def manage_users():
     conn.close()
     return render_template("super_admin/manage_users.html", users=users)
 
+@app.route('/super-admin/debug-accounts')
+@super_admin_required
+def debug_accounts():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT user_id, name, email, status FROM users")
+    users = [dict(row) for row in cursor.fetchall()]
+    
+    cursor.execute("SELECT admin_id, name, email, role, status FROM admin")
+    admins = [dict(row) for row in cursor.fetchall()]
+    
+    cursor.close()
+    conn.close()
+    
+    return {
+        "user_table_count": len(users),
+        "users": users,
+        "admin_table_count": len(admins),
+        "admins": admins
+    }
+
 @app.route('/super-admin/block-merchant/<int:id>')
 @super_admin_required
 def block_merchant(id):
