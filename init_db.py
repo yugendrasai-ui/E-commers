@@ -23,7 +23,9 @@ def init_db():
         name TEXT NOT NULL,
         email TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
-        role TEXT DEFAULT 'seller'
+        role TEXT DEFAULT 'seller',
+        status TEXT DEFAULT 'pending',
+        is_seen INTEGER DEFAULT 0
     )
     ''')
 
@@ -75,8 +77,10 @@ def init_db():
     tables_to_check = {
         "users": [("status", "TEXT DEFAULT 'active'")],
         "products": [("stock", "INTEGER DEFAULT 10")],
-        "orders": [("address", "TEXT")]
+        "orders": [("address", "TEXT")],
+        "admin": [("status", "TEXT DEFAULT 'pending'"), ("is_seen", "INTEGER DEFAULT 0")]
     }
+
 
     for table, columns in tables_to_check.items():
         cursor.execute(f"PRAGMA table_info({table})")
