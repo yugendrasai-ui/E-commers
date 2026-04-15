@@ -23,10 +23,18 @@ def send_otp(mail, email, subject, body_template):
         mail.send(msg)
         return True
     except Exception as e:
-        flash(f"Email Error: {str(e)}", "danger")
+        # Render Free Tier blocks SMTP (Port 587/465). 
+        # For demo purposes, we fallback to showing the OTP on screen.
+        error_msg = str(e)
+        if "Network is unreachable" in error_msg or "Timeout" in error_msg:
+            flash(f"DEMO MODE: Render blocks emails. Your OTP is: {otp}", "warning")
+            return True # Allow registration to proceed in demo mode
+        
+        flash(f"Email Error: {error_msg}", "danger")
         with open('email_error.log', 'a') as f:
-            f.write(f"Error sending email to {email}: {str(e)}\n")
+            f.write(f"Error sending email to {email}: {error_msg}\n")
         return False
+
 
 
 def verify_otp(user_otp):
