@@ -11,7 +11,8 @@ def init_db():
         user_id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         email TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL
+        password TEXT NOT NULL,
+        status TEXT DEFAULT 'active'
     )
     ''')
 
@@ -36,6 +37,7 @@ def init_db():
         price REAL,
         image TEXT,
         admin_id INTEGER,
+        stock INTEGER DEFAULT 10,
         FOREIGN KEY (admin_id) REFERENCES admin (admin_id)
     )
     ''')
@@ -49,6 +51,7 @@ def init_db():
         razorpay_payment_id TEXT,
         amount REAL,
         payment_status TEXT,
+        address TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users (user_id)
     )
@@ -68,7 +71,23 @@ def init_db():
     )
     ''')
 
+    # --- Migration: Add missing columns to existing tables ---
+    tables_to_check = {
+        "users": [("status", "TEXT DEFAULT 'active'")],
+        "products": [("stock", "INTEGER DEFAULT 10")],
+        "orders": [("address", "TEXT")]
+    }
+
+    for table, columns in tables_to_check.items():
+        cursor.execute(f"PRAGMA table_info({table})")
+        existing_columns = [col[1] for col in cursor.fetchall()]
+        for col_name, col_def in columns:
+            if col_name not in existing_columns:
+                print(f"Adding column {col_name} to {table}...")
+                cursor.execute(f"ALTER TABLE {table} ADD COLUMN {col_name} {col_def}")
+
     conn.commit()
+
 
     # Seed initial data if tables are empty
     cursor.execute("SELECT COUNT(*) FROM admin")
