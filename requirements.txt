@@ -3,3 +3,4 @@ Flask-Mail
 bcrypt
 razorpay
 reportlab
+sib-api-v3-sdk

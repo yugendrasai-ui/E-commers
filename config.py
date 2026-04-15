@@ -14,10 +14,15 @@ MAIL_USE_SSL = False
 MAIL_USERNAME = 'yugendrasai797@gmail.com'
 MAIL_PASSWORD = 'ckcfrfofnknjmkss'
 
-#PayMent Configuration
+# PayMent Configuration
 RAZORPAY_KEY_ID = "rzp_live_SO2OyNtnyLYLQQ"
 RAZORPAY_KEY_SECRET = "FZRv4xly9j2QbccfG1S1299e"
 
+# Brevo API Configuration
+import os
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
+
 # Super Admin Credentials
+
 SUPER_ADMIN_EMAIL = "yugendrasai797@gmail.com"
 SUPER_ADMIN_PASSWORD = "admin123"
