@@ -68,6 +68,7 @@ def init_db():
         product_name TEXT,
         quantity INTEGER,
         price REAL,
+        is_seen INTEGER DEFAULT 0,
         FOREIGN KEY (order_id) REFERENCES orders (order_id),
         FOREIGN KEY (product_id) REFERENCES products (product_id)
     )
@@ -78,7 +79,8 @@ def init_db():
         "users": [("status", "TEXT DEFAULT 'active'")],
         "products": [("stock", "INTEGER DEFAULT 10")],
         "orders": [("address", "TEXT")],
-        "admin": [("status", "TEXT DEFAULT 'pending'"), ("is_seen", "INTEGER DEFAULT 0")]
+        "admin": [("status", "TEXT DEFAULT 'pending'"), ("is_seen", "INTEGER DEFAULT 0")],
+        "order_items": [("is_seen", "INTEGER DEFAULT 0")]
     }
 
 
