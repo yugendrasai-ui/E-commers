@@ -11,7 +11,8 @@ if DATABASE_URL:
     DB_PATH = DATABASE_URL
 else:
     DB_TYPE = "sqlite"
-    DB_PATH = os.path.join(os.getcwd(), 'ecommerce.db')
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    DB_PATH = os.path.join(basedir, 'ecommerce.db')
 
 # Email SMTP Settings
 

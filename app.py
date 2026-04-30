@@ -102,7 +102,8 @@ razorpay_client = razorpay.Client(auth=(config.RAZORPAY_KEY_ID, config.RAZORPAY_
 
 
 # ------------------- IMAGE UPLOAD PATH -------------------
-UPLOAD_FOLDER = 'static/uploads/product_images'
+basedir = os.path.abspath(os.path.dirname(__file__))
+UPLOAD_FOLDER = os.path.join(basedir, 'static', 'uploads', 'product_images')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
@@ -179,6 +180,15 @@ def verify_otp_post():
     user_otp = request.form['otp']
     password = request.form['password']
 
+    # Retrieve session variables
+    signup_email = session.get('signup_email')
+    signup_name = session.get('signup_name')
+    signup_role = session.get('signup_role')
+
+    if not signup_email or not signup_role:
+        flash("Session expired or invalid. Please register again.", "danger")
+        return redirect('/user-register' if signup_role == 'user' else '/merchant-signup')
+
     # Compare OTP
     if str(session.get('otp')) != str(user_otp):
         flash("Invalid OTP. Try again!", "danger")
@@ -191,24 +201,31 @@ def verify_otp_post():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    if session.get('signup_role') == 'user':
-        cursor.execute(
-            "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
-            (session['signup_name'], session['signup_email'], hashed_password)
-        )
-        msg = "Account Registered Successfully! Please Login."
-        redirect_url = '/user-login'
-    else:
-        cursor.execute(
-            "INSERT INTO admin (name, email, password, status, is_seen) VALUES (?, ?, ?, ?, ?)",
-            (session['signup_name'], session['signup_email'], hashed_password, 'pending', 0)
-        )
-        msg = "Merchant Registered Successfully! Please wait for Super Admin approval."
-        redirect_url = '/merchant-login'
-        
-    conn.commit()
-    cursor.close()
-    conn.close()
+    try:
+        if signup_role == 'user':
+            cursor.execute(
+                "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
+                (signup_name, signup_email, hashed_password)
+            )
+            msg = "Account Registered Successfully! Please Login."
+            redirect_url = '/user-login'
+        else:
+            cursor.execute(
+                "INSERT INTO admin (name, email, password, status, is_seen) VALUES (?, ?, ?, ?, ?)",
+                (signup_name, signup_email, hashed_password, 'pending', 0)
+            )
+            msg = "Merchant Registered Successfully! Please wait for Super Admin approval."
+            redirect_url = '/merchant-login'
+            
+        conn.commit()
+        flash(msg, "success")
+    except sqlite3.IntegrityError:
+        conn.rollback()
+        flash("Email is already registered! Please login.", "danger")
+        redirect_url = '/user-login' if signup_role == 'user' else '/merchant-login'
+    finally:
+        cursor.close()
+        conn.close()
 
     # Clear temporary session data
     session.pop('otp', None)
@@ -216,7 +233,6 @@ def verify_otp_post():
     session.pop('signup_email', None)
     session.pop('signup_role', None)
 
-    flash(msg, "success")
     return redirect(redirect_url)
 
 
